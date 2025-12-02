@@ -1,0 +1,52 @@
+[
+  {
+    "dayOfYear": 1,
+    "title": "Yılın İlk Günü",
+    "fact": "Bir yıl içinde Dünya, Güneş etrafında tam 365,25 gün süren bir yolculuk yapar. Bu 0,25 günlük fark nedeniyle her dört yılda bir 29 Şubat eklenir!"
+  },
+  {
+    "dayOfYear": 2,
+    "title": "İnsan Beyni",
+    "fact": "İnsan beyninde yaklaşık 86 milyar nöron bulunur. Her nöron, diğer nöronlarla binlerce bağlantı kurabilir!"
+  },
+  {
+    "dayOfYear": 3,
+    "title": "Işık Hızı",
+    "fact": "Işık, saniyede 299.792 kilometre yol alır. Bu hızla dünyayı bir saniyede 7,5 kez turlamak mümkün!"
+  },
+  {
+    "dayOfYear": 4,
+    "title": "Su Döngüsü",
+    "fact": "Şu anda içtiğin su, milyonlarca yıl önce bir dinozorun içmiş olabileceği aynı su olabilir. Su gezegenimizdeki döngüsünü sürekli tekrar eder!"
+  },
+  {
+    "dayOfYear": 5,
+    "title": "Kalp Atışı",
+    "fact": "İnsan kalbi bir gün içinde ortalama 100.000 kez atar. Bir ömür boyunca ise yaklaşık 3 milyar kez çarpar!"
+  },
+  {
+    "dayOfYear": 6,
+    "title": "Türkiye'nin Sınırları",
+    "fact": "Türkiye, hem Avrupa hem de Asya kıtasında yer alan tek ülkedir. İstanbul, iki kıtayı birbirine bağlayan özel bir şehirdir!"
+  },
+  {
+    "dayOfYear": 7,
+    "title": "Atatürk'ün Kitap Sevgisi",
+    "fact": "Mustafa Kemal Atatürk'ün kişisel kütüphanesinde 4.000'den fazla kitap vardı. Fransızca, Almanca ve Arapça dahil pek çok dilde kitap okurdu!"
+  },
+  {
+    "dayOfYear": 8,
+    "title": "Fotosentez",
+    "fact": "Bitkiler fotosentez yaparak havadaki karbondioksiti alıp oksijen üretir. Bir ağaç yılda ortalama 120 kg oksijen sağlar!"
+  },
+  {
+    "dayOfYear": 9,
+    "title": "Matematik ve Doğa",
+    "fact": "Fibonacci dizisi (1, 1, 2, 3, 5, 8, 13...) doğada sık görülür: ayçiçeği tohumlarının diziliminden salyangoz kabuğuna kadar!"
+  },
+  {
+    "dayOfYear": 10,
+    "title": "Ses Hızı",
+    "fact": "Ses, havada saniyede yaklaşık 340 metre hızla yayılır. Yıldırım çaktığında ışığı hemen görürüz ama sesini (gök gürültüsü) biraz sonra duyarız!"
+  }
+]
