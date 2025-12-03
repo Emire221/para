@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/bot.dart';
 import '../../domain/entities/arena_question.dart';
 import '../../domain/controllers/bot_controller.dart';
+import '../../../../../../services/database_helper.dart';
+import '../../../../mascot/presentation/providers/mascot_provider.dart';
 
 /// Arena düello ekranı
-class ArenaScreen extends StatefulWidget {
+class ArenaScreen extends ConsumerStatefulWidget {
   final Bot selectedBot;
   final List<ArenaQuestion>? questions;
 
   const ArenaScreen({super.key, required this.selectedBot, this.questions});
 
   @override
-  State<ArenaScreen> createState() => _ArenaScreenState();
+  ConsumerState<ArenaScreen> createState() => _ArenaScreenState();
 }
 
-class _ArenaScreenState extends State<ArenaScreen> {
+class _ArenaScreenState extends ConsumerState<ArenaScreen> {
   late Bot _selectedBot;
   late BotController _botController;
 
@@ -290,9 +293,45 @@ class _ArenaScreenState extends State<ArenaScreen> {
     });
     _botController.stop();
 
+    // Sonuçları kaydet ve XP ekle
+    _saveResults(playerWon);
+
     Future.delayed(const Duration(milliseconds: 500), () {
       _showResultDialog(playerWon);
     });
+  }
+
+  /// Oyun sonuçlarını kaydet
+  Future<void> _saveResults(bool playerWon) async {
+    try {
+      final dbHelper = DatabaseHelper();
+      await dbHelper.saveGameResult(
+        gameType: 'arena',
+        score: _playerScore * 20, // Her doğru 20 puan
+        correctCount: _playerScore,
+        wrongCount: _targetScore - _playerScore,
+        totalQuestions: _targetScore,
+        details: playerWon ? 'Kazanıldı' : 'Kaybedildi',
+      );
+
+      // Maskota XP ekle
+      await _addXpToMascot();
+      debugPrint('Arena oyunu kaydedildi - Kazanıldı: $playerWon');
+    } catch (e) {
+      debugPrint('Arena sonuç kaydetme hatası: $e');
+    }
+  }
+
+  /// Maskota XP ekle - Her oyun bitiminde 1 XP
+  Future<void> _addXpToMascot() async {
+    try {
+      final mascotRepository = ref.read(mascotRepositoryProvider);
+      await mascotRepository.addXp(1);
+      ref.invalidate(activeMascotProvider);
+      debugPrint('Arena oyunu - Maskota 1 XP eklendi');
+    } catch (e) {
+      debugPrint('Maskot XP ekleme hatası: $e');
+    }
   }
 
   void _showResultDialog(bool playerWon) {

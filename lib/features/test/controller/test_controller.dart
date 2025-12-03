@@ -46,6 +46,7 @@ class TestController extends StateNotifier<TestState> {
       if (state.timeLeft > 0 && state.status == TestStatus.active) {
         state = state.copyWith(timeLeft: state.timeLeft - 1);
       } else if (state.timeLeft <= 0) {
+        // Süre bittiğinde de finishTest'i await ile çağır
         finishTest();
       }
     });
@@ -66,7 +67,7 @@ class TestController extends StateNotifier<TestState> {
   }
 
   /// Soruyu cevapla
-  void answerQuestion(String selectedAnswer) {
+  Future<void> answerQuestion(String selectedAnswer) async {
     if (state.currentQuestion == null || state.status != TestStatus.active) {
       return;
     }
@@ -94,13 +95,16 @@ class TestController extends StateNotifier<TestState> {
       score: newScore,
     );
 
-    // ÖNEMLİ: State güncellemesi tamamlandıktan SONRA kontrol et
+    // ÖNEMLİ: State güncellemesinin tam olarak uygulanmasını garanti et
+    // Bu, özellikle son soru için kritik (race condition önleme)
+    await Future.microtask(() {});
+
     // Sonraki soruya geç veya bitir
     if (state.currentQuestionIndex < state.questions.length - 1) {
       nextQuestion();
     } else {
-      // Son sorudayız, state zaten güncellendiği için finishTest güvenli
-      finishTest();
+      // Son sorudayız, state güncellemesi tamamlandı, şimdi testi bitir
+      await finishTest();
     }
   }
 
@@ -109,13 +113,22 @@ class TestController extends StateNotifier<TestState> {
     if (state.currentQuestionIndex < state.questions.length - 1) {
       state = state.copyWith(
         currentQuestionIndex: state.currentQuestionIndex + 1,
+        timeLeft: AppConstants.defaultTestDuration, // Her soru için 60 saniye
       );
+
+      // Timer'ı yeniden başlat (her soru için 60 saniye)
+      startTimer();
     }
   }
 
   /// Testi bitir
-  void finishTest() {
+  Future<void> finishTest() async {
     _timer?.cancel();
+
+    // ÖNEMLİ: State güncellemelerinin tamamlanmasını bekle
+    // Son sorunun puanının kaybolmaması için kritik
+    await Future.microtask(() {});
+
     state = state.copyWith(status: TestStatus.completed);
 
     if (_currentTestId != null) {

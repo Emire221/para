@@ -19,7 +19,8 @@ class FillBlanksLevel {
   /// JSON'dan model oluşturma
   factory FillBlanksLevel.fromJson(Map<String, dynamic> json) {
     return FillBlanksLevel(
-      id: json['id'] as String,
+      // 'levelID' veya 'id' alanını destekle (geriye uyumluluk için)
+      id: (json['levelID'] ?? json['id']) as String,
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
       difficulty: json['difficulty'] as int? ?? 1,

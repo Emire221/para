@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/database_helper.dart';
+import '../features/mascot/presentation/providers/mascot_provider.dart';
 import 'answer_key_screen.dart';
 import 'main_screen.dart';
 
-class ResultScreen extends StatefulWidget {
+class ResultScreen extends ConsumerStatefulWidget {
   final int score;
   final int correctCount;
   final int wrongCount;
   final String topicId;
   final String topicName;
   final List<Map<String, dynamic>> answeredQuestions;
+  final bool isFlashcard;
 
   const ResultScreen({
     super.key,
@@ -19,29 +22,60 @@ class ResultScreen extends StatefulWidget {
     this.topicId = '',
     this.topicName = '',
     this.answeredQuestions = const [],
+    this.isFlashcard = false,
   });
 
   @override
-  State<ResultScreen> createState() => _ResultScreenState();
+  ConsumerState<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> {
+class _ResultScreenState extends ConsumerState<ResultScreen> {
+  bool _resultSaved = false;
+
   @override
   void initState() {
     super.initState();
-    _saveResult();
+    _initializeResults();
+  }
+
+  Future<void> _initializeResults() async {
+    await _saveResult();
+    await _addXpToMascot();
   }
 
   Future<void> _saveResult() async {
-    // Yerel veritabanına kaydet
-    final dbHelper = DatabaseHelper();
-    await dbHelper.saveGameResult(
-      gameType: 'test',
-      score: widget.score,
-      correctCount: widget.correctCount,
-      wrongCount: widget.wrongCount,
-      totalQuestions: widget.correctCount + widget.wrongCount,
-    );
+    // Çift kayıt önleme
+    if (_resultSaved) return;
+    _resultSaved = true;
+
+    try {
+      // Yerel veritabanına kaydet
+      final dbHelper = DatabaseHelper();
+      await dbHelper.saveGameResult(
+        gameType: widget.isFlashcard ? 'flashcard' : 'test',
+        score: widget.score,
+        correctCount: widget.correctCount,
+        wrongCount: widget.wrongCount,
+        totalQuestions: widget.correctCount + widget.wrongCount,
+      );
+      debugPrint(
+        'Sonuç kaydedildi: ${widget.isFlashcard ? "flashcard" : "test"} - Skor: ${widget.score}',
+      );
+    } catch (e) {
+      debugPrint('Sonuç kaydetme hatası: $e');
+    }
+  }
+
+  /// Maskota XP ekle - Her oyun/test bitiminde 1 XP
+  Future<void> _addXpToMascot() async {
+    try {
+      final mascotRepository = ref.read(mascotRepositoryProvider);
+      await mascotRepository.addXp(1);
+      // Provider'ı yenile ki UI güncellensin
+      ref.invalidate(activeMascotProvider);
+    } catch (e) {
+      debugPrint('Maskot XP ekleme hatası: $e');
+    }
   }
 
   @override
@@ -102,28 +136,31 @@ class _ResultScreenState extends State<ResultScreen> {
                     ),
                     child: const Text('Ana Sayfa'),
                   ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AnswerKeyScreen(
-                            answeredQuestions: widget.answeredQuestions,
+                  // Flashcard modunda Cevapları Gör butonu gizlenir
+                  if (!widget.isFlashcard) ...[
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AnswerKeyScreen(
+                              answeredQuestions: widget.answeredQuestions,
+                            ),
                           ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
                       ),
+                      child: const Text('Cevapları Gör'),
                     ),
-                    child: const Text('Cevapları Gör'),
-                  ),
+                  ],
                 ],
               ),
             ],

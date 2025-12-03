@@ -1,6 +1,7 @@
 /// Cümle tamamlama sorusu entity'si
 class FillBlanksQuestion {
-  final int id;
+  final String
+  id; // String olarak güncellendi (JSON'daki "q1", "q2" gibi değerler için)
   final String question;
   final String answer;
   final List<String> options;
@@ -16,7 +17,7 @@ class FillBlanksQuestion {
 
   factory FillBlanksQuestion.fromMap(Map<String, dynamic> map) {
     return FillBlanksQuestion(
-      id: map['id'] as int,
+      id: map['id']?.toString() ?? '0',
       question: map['question'] as String,
       answer: map['answer'] as String,
       options: List<String>.from(map['options']),
@@ -27,7 +28,7 @@ class FillBlanksQuestion {
   /// JSON'dan model oluşturma (Level sisteminde kullanılıyor)
   factory FillBlanksQuestion.fromJson(Map<String, dynamic> json) {
     return FillBlanksQuestion(
-      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      id: json['id']?.toString() ?? '0',
       question: json['question'] as String,
       answer: json['answer'] as String,
       options: List<String>.from(json['options']),
@@ -48,7 +49,7 @@ class FillBlanksQuestion {
   /// Model'den JSON'a dönüştürme (Level sisteminde kullanılıyor)
   Map<String, dynamic> toJson() {
     return {
-      'id': id.toString(),
+      'id': id,
       'question': question,
       'answer': answer,
       'options': options,

@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/fill_blanks_level.dart';
 import '../../domain/entities/fill_blanks_question.dart';
 import '../../../../../../services/database_helper.dart';
+import '../../../../mascot/presentation/providers/mascot_provider.dart';
 
 /// Cümle tamamlama oyunu ekranı
-class FillBlanksScreen extends StatefulWidget {
+class FillBlanksScreen extends ConsumerStatefulWidget {
   final FillBlanksLevel level;
 
   const FillBlanksScreen({super.key, required this.level});
 
   @override
-  State<FillBlanksScreen> createState() => _FillBlanksScreenState();
+  ConsumerState<FillBlanksScreen> createState() => _FillBlanksScreenState();
 }
 
-class _FillBlanksScreenState extends State<FillBlanksScreen> {
+class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen> {
   late List<FillBlanksQuestion> _questions;
   int _currentQuestionIndex = 0;
   int _score = 0;
@@ -272,8 +274,23 @@ class _FillBlanksScreenState extends State<FillBlanksScreen> {
         totalQuestions: _questions.length,
         details: widget.level.title,
       );
+
+      // Maskota XP ekle
+      await _addXpToMascot();
     } catch (e) {
       debugPrint('Sonuç kaydetme hatası: $e');
+    }
+  }
+
+  /// Maskota XP ekle - Her oyun bitiminde 1 XP
+  Future<void> _addXpToMascot() async {
+    try {
+      final mascotRepository = ref.read(mascotRepositoryProvider);
+      await mascotRepository.addXp(1);
+      ref.invalidate(activeMascotProvider);
+      debugPrint('Fill Blanks oyunu - Maskota 1 XP eklendi');
+    } catch (e) {
+      debugPrint('Maskot XP ekleme hatası: $e');
     }
   }
 }

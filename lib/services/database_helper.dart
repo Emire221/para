@@ -558,4 +558,54 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     return await db.query('GameResults', orderBy: 'completedAt DESC');
   }
+
+  // ============================================================
+  // Performans Optimizasyonu - SQL RANDOM() Metodları
+  // ============================================================
+
+  /// Rastgele Fill Blanks level çeker
+  /// Tüm veriyi belleğe almak yerine SQL RANDOM() kullanır
+  Future<Map<String, dynamic>?> getRandomFillBlanksLevel() async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM FillBlanksLevels ORDER BY RANDOM() LIMIT 1',
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Rastgele Arena set çeker
+  /// Tüm veriyi belleğe almak yerine SQL RANDOM() kullanır
+  Future<Map<String, dynamic>?> getRandomArenaSet() async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM ArenaSets ORDER BY RANDOM() LIMIT 1',
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Belirlenen zorluk seviyesinden rastgele Fill Blanks level çeker
+  /// @param difficulty: 1-3 arası zorluk seviyesi
+  Future<Map<String, dynamic>?> getRandomFillBlanksByDifficulty(
+    int difficulty,
+  ) async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM FillBlanksLevels WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
+      [difficulty],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Belirlenen zorluk seviyesinden rastgele Arena set çeker
+  /// @param difficulty: 1-3 arası zorluk seviyesi
+  Future<Map<String, dynamic>?> getRandomArenaByDifficulty(
+    int difficulty,
+  ) async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM ArenaSets WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
+      [difficulty],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
 }

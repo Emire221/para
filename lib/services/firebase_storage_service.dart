@@ -341,11 +341,8 @@ class FirebaseStorageService {
             // Fill Blanks Level dosyası mı kontrol et (levelID alanı var mı?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('levelID')) {
-              // levelID'yi id'ye map et
-              final levelData = Map<String, dynamic>.from(jsonData);
-              levelData['id'] = levelData['levelID'];
-              levelData.remove('levelID');
               // questions field'ını JSON string olarak kaydet
+              final levelData = Map<String, dynamic>.from(jsonData);
               if (levelData.containsKey('questions')) {
                 levelData['questions'] = json.encode(levelData['questions']);
               }
