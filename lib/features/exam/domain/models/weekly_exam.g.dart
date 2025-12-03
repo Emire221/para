@@ -8,7 +8,7 @@ part of 'weekly_exam.dart';
 
 _$WeeklyExamImpl _$$WeeklyExamImplFromJson(Map<String, dynamic> json) =>
     _$WeeklyExamImpl(
-      examId: json['examId'] as String,
+      examId: json['weeklyExamId'] as String,
       title: json['title'] as String,
       weekStart: json['weekStart'] as String,
       duration: (json['duration'] as num).toInt(),
@@ -20,7 +20,7 @@ _$WeeklyExamImpl _$$WeeklyExamImplFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$$WeeklyExamImplToJson(_$WeeklyExamImpl instance) =>
     <String, dynamic>{
-      'examId': instance.examId,
+      'weeklyExamId': instance.examId,
       'title': instance.title,
       'weekStart': instance.weekStart,
       'duration': instance.duration,

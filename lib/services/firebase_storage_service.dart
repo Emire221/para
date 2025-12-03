@@ -307,6 +307,7 @@ class FirebaseStorageService {
       int processedFlashcards = 0;
       int processedLevels = 0;
       int processedArenaSets = 0;
+      int processedWeeklyExams = 0;
       int skippedFiles = 0;
 
       for (var item in allFiles) {
@@ -362,6 +363,18 @@ class FirebaseStorageService {
               processedArenaSets++;
               debugPrint('Arena Set işlendi: $fileName');
             }
+            // Haftalık Sınav dosyası mı kontrol et (weeklyExamId alanı var mı?)
+            else if (jsonData is Map<String, dynamic> &&
+                jsonData.containsKey('weeklyExamId')) {
+              // questions field'ını JSON string olarak kaydet
+              final examData = Map<String, dynamic>.from(jsonData);
+              if (examData.containsKey('questions')) {
+                examData['questions'] = json.encode(examData['questions']);
+              }
+              await _dbHelper.insertWeeklyExam(examData);
+              processedWeeklyExams++;
+              debugPrint('Haftalık Sınav işlendi: $fileName');
+            }
             // Ne test ne bilgi kartı ne de oyun dosyası değilse
             else {
               skippedFiles++;
@@ -376,11 +389,11 @@ class FirebaseStorageService {
 
       debugPrint(
         'İşlem özeti: $processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set, $skippedFiles atlanan dosya',
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, $skippedFiles atlanan dosya',
       );
       onProgress(
         'İçerik veritabanına kaydedildi ($processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set)',
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav)',
       );
     } catch (e) {
       debugPrint('Yerel içerik işleme hatası: $e');

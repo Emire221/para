@@ -57,9 +57,33 @@ class WeeklyExamService {
     return 'Hafta $weekNum - ${weekStart.year}';
   }
 
-  /// Yerel dosyadan haftalık sınavı yükle
+  /// Veritabanından haftalık sınavı yükle
   Future<WeeklyExam?> loadWeeklyExam() async {
     try {
+      // Önce veritabanından en son sınavı kontrol et
+      final examData = await _dbHelper.getLatestWeeklyExam();
+
+      if (examData != null) {
+        // questions JSON string olarak saklandığı için decode et
+        final questionsJson = examData['questions'] as String?;
+        List<dynamic> questions = [];
+        if (questionsJson != null && questionsJson.isNotEmpty) {
+          questions = json.decode(questionsJson);
+        }
+
+        return WeeklyExam(
+          examId: examData['weeklyExamId'] as String,
+          title: examData['title'] as String? ?? 'Haftalık Sınav',
+          weekStart: examData['weekStart'] as String? ?? '',
+          duration: examData['duration'] as int? ?? 30,
+          description: examData['description'] as String?,
+          questions: questions
+              .map((q) => WeeklyExamQuestion.fromJson(q))
+              .toList(),
+        );
+      }
+
+      // Database'de yoksa dosya sisteminde ara (eski yöntem)
       final directory = await getApplicationDocumentsDirectory();
 
       // Kullanıcının sınıfına göre klasör adını bul

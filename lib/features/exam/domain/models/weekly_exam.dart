@@ -7,6 +7,7 @@ part 'weekly_exam.g.dart';
 @freezed
 class WeeklyExam with _$WeeklyExam {
   const factory WeeklyExam({
+    /// JSON'da weeklyExamId olarak gelir
     required String examId,
     required String title,
     required String weekStart, // Pazartesi tarihi (ISO 8601)
@@ -15,8 +16,14 @@ class WeeklyExam with _$WeeklyExam {
     String? description,
   }) = _WeeklyExam;
 
-  factory WeeklyExam.fromJson(Map<String, dynamic> json) =>
-      _$WeeklyExamFromJson(json);
+  factory WeeklyExam.fromJson(Map<String, dynamic> json) {
+    // weeklyExamId -> examId dönüşümü
+    final data = Map<String, dynamic>.from(json);
+    if (data.containsKey('weeklyExamId') && !data.containsKey('examId')) {
+      data['examId'] = data['weeklyExamId'];
+    }
+    return _$WeeklyExamFromJson(data);
+  }
 }
 
 /// Haftalık sınav sorusu

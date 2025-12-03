@@ -21,6 +21,7 @@ WeeklyExam _$WeeklyExamFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$WeeklyExam {
+  @JsonKey(name: 'weeklyExamId')
   String get examId => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   String get weekStart =>
@@ -47,7 +48,7 @@ abstract class $WeeklyExamCopyWith<$Res> {
   ) = _$WeeklyExamCopyWithImpl<$Res, WeeklyExam>;
   @useResult
   $Res call({
-    String examId,
+    @JsonKey(name: 'weeklyExamId') String examId,
     String title,
     String weekStart,
     int duration,
@@ -120,7 +121,7 @@ abstract class _$$WeeklyExamImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String examId,
+    @JsonKey(name: 'weeklyExamId') String examId,
     String title,
     String weekStart,
     int duration,
@@ -185,7 +186,7 @@ class __$$WeeklyExamImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$WeeklyExamImpl implements _WeeklyExam {
   const _$WeeklyExamImpl({
-    required this.examId,
+    @JsonKey(name: 'weeklyExamId') required this.examId,
     required this.title,
     required this.weekStart,
     required this.duration,
@@ -197,6 +198,7 @@ class _$WeeklyExamImpl implements _WeeklyExam {
       _$$WeeklyExamImplFromJson(json);
 
   @override
+  @JsonKey(name: 'weeklyExamId')
   final String examId;
   @override
   final String title;
@@ -270,7 +272,7 @@ class _$WeeklyExamImpl implements _WeeklyExam {
 
 abstract class _WeeklyExam implements WeeklyExam {
   const factory _WeeklyExam({
-    required final String examId,
+    @JsonKey(name: 'weeklyExamId') required final String examId,
     required final String title,
     required final String weekStart,
     required final int duration,
@@ -282,6 +284,7 @@ abstract class _WeeklyExam implements WeeklyExam {
       _$WeeklyExamImpl.fromJson;
 
   @override
+  @JsonKey(name: 'weeklyExamId')
   String get examId;
   @override
   String get title;

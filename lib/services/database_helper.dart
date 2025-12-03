@@ -8,6 +8,8 @@ abstract class IDatabaseHelper {
   Future<void> insertFlashcardSet(Map<String, dynamic> row);
   Future<void> insertFillBlanksLevel(Map<String, dynamic> row);
   Future<void> insertArenaSet(Map<String, dynamic> row);
+  Future<void> insertWeeklyExam(Map<String, dynamic> row);
+  Future<Map<String, dynamic>?> getLatestWeeklyExam();
   Future<void> clearAllData();
   Future<void> addDownloadedFile(String path);
   Future<void> insertDers(Map<String, dynamic> row);
@@ -34,7 +36,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -190,6 +192,18 @@ class DatabaseHelper implements IDatabaseHelper {
         totalQuestions INTEGER,
         completedAt TEXT,
         details TEXT
+      )
+    ''');
+
+    // Haftalık Sınavlar Tablosu (İndirilen sınav verileri)
+    await db.execute('''
+      CREATE TABLE WeeklyExams(
+        weeklyExamId TEXT PRIMARY KEY,
+        title TEXT,
+        weekStart TEXT,
+        duration INTEGER,
+        description TEXT,
+        questions TEXT
       )
     ''');
 
@@ -358,6 +372,20 @@ class DatabaseHelper implements IDatabaseHelper {
         )
       ''');
     }
+
+    if (oldVersion < 8) {
+      // Haftalık Sınavlar Tablosu (İndirilen sınav verileri)
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS WeeklyExams(
+          weeklyExamId TEXT PRIMARY KEY,
+          title TEXT,
+          weekStart TEXT,
+          duration INTEGER,
+          description TEXT,
+          questions TEXT
+        )
+      ''');
+    }
   }
 
   // Ekleme Metotları
@@ -414,6 +442,29 @@ class DatabaseHelper implements IDatabaseHelper {
   @override
   Future<void> insertFlashcardSet(Map<String, dynamic> row) async {
     await insertBilgiKart(row);
+  }
+
+  // Haftalık Sınav ekleme metodu
+  @override
+  Future<void> insertWeeklyExam(Map<String, dynamic> row) async {
+    Database db = await database;
+    await db.insert(
+      'WeeklyExams',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Haftalık Sınav getirme metodu
+  @override
+  Future<Map<String, dynamic>?> getLatestWeeklyExam() async {
+    Database db = await database;
+    final results = await db.query(
+      'WeeklyExams',
+      orderBy: 'weekStart DESC',
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
   }
 
   // Bildirimler için CRUD Metotları
