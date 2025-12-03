@@ -375,10 +375,22 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                     ),
                   ),
                 ),
-                child: SizedBox(
-                  width: 320,
-                  height: 450,
-                  child: GlassContainer(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    // Ekran boyutuna göre kart boyutunu hesapla
+                    final cardWidth = screenWidth * 0.85 > 400
+                        ? 400.0
+                        : screenWidth * 0.85;
+                    final cardHeight = screenHeight * 0.55 > 500
+                        ? 500.0
+                        : screenHeight * 0.55;
+
+                    return SizedBox(
+                      width: cardWidth,
+                      height: cardHeight,
+                      child: GlassContainer(
                     color: Colors.white,
                     opacity: 0.95,
                     child: Center(
@@ -417,6 +429,8 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                       ),
                     ),
                   ),
+                    );
+                  },
                 ),
               )
             : const SizedBox.shrink(), // Kartlar bittiğinde boş widget

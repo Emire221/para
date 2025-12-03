@@ -242,8 +242,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // İl Seçimi
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       initialValue: _selectedCity,
                       dropdownColor: const Color(0xFF11998e),
                       style: const TextStyle(color: Colors.white),
@@ -261,8 +261,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // İlçe Seçimi
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       initialValue: _selectedDistrict,
                       dropdownColor: const Color(0xFF11998e),
                       style: const TextStyle(color: Colors.white),
@@ -279,8 +279,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // Okul Seçimi
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       initialValue: _selectedSchoolID,
                       dropdownColor: const Color(0xFF11998e),
                       style: const TextStyle(color: Colors.white),
@@ -307,8 +307,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     const SizedBox(height: 16),
 
                     // Sınıf Seçimi
-                    // ignore: deprecated_member_use
                     DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
                       initialValue: _selectedClass,
                       dropdownColor: const Color(0xFF11998e),
                       style: const TextStyle(color: Colors.white),
