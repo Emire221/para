@@ -67,10 +67,6 @@ class FirebaseStorageService {
         className,
         'konulistesi.json',
       );
-      final konuVideoStr = await _downloadJsonString(
-        className,
-        'konuvideo.json',
-      );
 
       if (dersListesiStr == null || konuListesiStr == null) {
         throw Exception('Temel dosyalar bulunamadı');
@@ -89,12 +85,6 @@ class FirebaseStorageService {
       // Konular
       final konularData = await compute(_parseKonular, konuListesiStr);
       await _dbHelper.batchInsert('Konular', konularData);
-
-      // Videolar
-      if (konuVideoStr != null) {
-        final videolarData = await compute(_parseVideolar, konuVideoStr);
-        await _dbHelper.batchInsert('Videolar', videolarData);
-      }
 
       // 4. Ders klasörlerini tara ve içerikleri indir
       final dersler = derslerData.map((d) => Lesson.fromJson(d)).toList();
@@ -301,15 +291,6 @@ class FirebaseStorageService {
         await _dbHelper.batchInsert('Konular', konularData);
       }
 
-      // 3. Konu Videoları (Opsiyonel)
-      final konuVideoFile = File('${dir.path}/konuvideo.json');
-      if (await konuVideoFile.exists()) {
-        onProgress('Videolar işleniyor...');
-        final jsonString = await konuVideoFile.readAsString();
-        final videolarData = await compute(_parseVideolar, jsonString);
-        await _dbHelper.batchInsert('Videolar', videolarData);
-      }
-
       // 4. Kök dizindeki tüm JSON dosyalarını tara (testler ve bilgi kartları)
       onProgress('Test ve bilgi kartları taranıyor...');
       final allFiles = dir.listSync();
@@ -434,9 +415,6 @@ class FirebaseStorageService {
       } else if (jsonPath.contains('konulistesi')) {
         final konularData = await compute(_parseKonular, jsonString);
         await _dbHelper.batchInsert('Konular', konularData);
-      } else if (jsonPath.contains('konuvideo')) {
-        final videolarData = await compute(_parseVideolar, jsonString);
-        await _dbHelper.batchInsert('Videolar', videolarData);
       } else if (jsonPath.contains('testler')) {
         final testData = _parseTest(jsonString);
         await _dbHelper.insertTest(testData);
@@ -520,13 +498,6 @@ List<Map<String, dynamic>> _parseKonular(String jsonString) {
   final jsonMap = json.decode(jsonString);
   return (jsonMap['konular'] as List)
       .map((e) => Topic.fromJson(e).toMap())
-      .toList();
-}
-
-List<Map<String, dynamic>> _parseVideolar(String jsonString) {
-  final jsonMap = json.decode(jsonString);
-  return (jsonMap['videolar'] as List)
-      .map((e) => Video.fromJson(e).toMap())
       .toList();
 }
 

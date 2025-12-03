@@ -118,18 +118,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: isDarkMode
-                          ? AppColors.textDark
-                          : AppColors.textLight,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                   Text(
                     '$grade Kaptanı',
                     style: TextStyle(
                       fontSize: 12,
-                      color: isDarkMode
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondaryLight,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
                     ),
                   ),
                 ],

@@ -3,7 +3,7 @@ import 'dart:math';
 import 'dart:convert';
 import '../../domain/entities/bot.dart';
 import '../../domain/entities/arena_question.dart';
-import '../../../../../services/firebase_storage_service.dart';
+import '../../../../../services/database_helper.dart';
 import '../../../../../widgets/glass_container.dart';
 import 'arena_screen.dart';
 
@@ -17,7 +17,7 @@ class OpponentSearchScreen extends StatefulWidget {
 
 class _OpponentSearchScreenState extends State<OpponentSearchScreen>
     with SingleTickerProviderStateMixin {
-  final FirebaseStorageService _storageService = FirebaseStorageService();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   late AnimationController _animationController;
   Bot? _selectedBot;
   List<ArenaQuestion>? _questions;
@@ -42,29 +42,27 @@ class _OpponentSearchScreenState extends State<OpponentSearchScreen>
   }
 
   Future<void> _startSearch() async {
-    // 1. Rastgele bot seç
     final random = Random();
     final randomDelay = 2 + random.nextInt(3); // 2-4 saniye
 
-    // 2. Firebase'den soruları yükle
     try {
-      final jsonString = await _storageService.downloadGameContent(
-        'games/arena/questions.json',
-      );
+      // Veritabanından arena setlerini yükle
+      final arenaSetsData = await _dbHelper.getArenaSets();
 
-      if (jsonString == null) {
-        throw Exception('Arena soruları yüklenemedi');
+      if (arenaSetsData.isEmpty) {
+        throw Exception('Arena soruları henüz yüklenmemiş');
       }
 
-      // JSON parse et
-      final jsonData = json.decode(jsonString);
-      final questionsList = jsonData['questions'] as List<dynamic>;
+      // Rastgele bir set seç
+      final selectedSet = arenaSetsData[random.nextInt(arenaSetsData.length)];
 
-      final questions = questionsList
+      // questions alanını parse et
+      final questionsJson = json.decode(selectedSet['questions'] as String);
+      final questions = (questionsJson as List)
           .map((q) => ArenaQuestion.fromJson(q as Map<String, dynamic>))
           .toList();
 
-      // 3. Belirlenen süre sonra rakip bul
+      // Belirlenen süre sonra rakip bul
       await Future.delayed(Duration(seconds: randomDelay));
 
       if (mounted) {
@@ -76,7 +74,7 @@ class _OpponentSearchScreenState extends State<OpponentSearchScreen>
 
         _animationController.stop();
 
-        // 4. 1.5 saniye sonra arena'ya geç
+        // 1.5 saniye sonra arena'ya geç
         await Future.delayed(const Duration(milliseconds: 1500));
 
         if (mounted) {
@@ -97,7 +95,7 @@ class _OpponentSearchScreenState extends State<OpponentSearchScreen>
         setState(() {
           _errorMessage =
               'Rakip bulunamadı.\n'
-              '�İnternet bağlantınızı kontrol edin.';
+              'Lütfen önce veri senkronizasyonunu yapın.';
         });
         _animationController.stop();
       }

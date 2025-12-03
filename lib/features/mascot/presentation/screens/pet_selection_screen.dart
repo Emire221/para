@@ -116,9 +116,10 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainScreen()),
+        (route) => false, // Tüm önceki rotaları temizle
       );
     } catch (e) {
       if (!mounted) return;

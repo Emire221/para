@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../domain/entities/fill_blanks_level.dart';
 import 'fill_blanks_screen.dart';
-import '../../../../../services/firebase_storage_service.dart';
+import '../../../../../services/database_helper.dart';
 import '../../../../../widgets/glass_container.dart';
 
 /// Seviye seçim ekranı - Cümle Tamamlama oyunu için
@@ -14,7 +14,7 @@ class LevelSelectionScreen extends StatefulWidget {
 }
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
-  final FirebaseStorageService _storageService = FirebaseStorageService();
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   List<FillBlanksLevel>? _levels;
   bool _isLoading = true;
   String? _errorMessage;
@@ -32,25 +32,22 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     });
 
     try {
-      // Firebase Storage'dan levels.json dosyasını indir
-      final jsonString = await _storageService.downloadGameContent(
-        'games/fill_blanks/levels.json',
-      );
+      // Veritabanından seviyeleri yükle
+      final levelsData = await _dbHelper.getFillBlanksLevels();
 
-      if (jsonString == null) {
-        throw Exception('Seviye verileri yüklenemedi');
+      if (levelsData.isEmpty) {
+        throw Exception('Henüz seviye verisi yüklenmemiş');
       }
 
-      // JSON parse et
-      final jsonData = json.decode(jsonString);
-      final levelsList = jsonData['levels'] as List<dynamic>;
-
-      final levels = levelsList
-          .map(
-            (levelJson) =>
-                FillBlanksLevel.fromJson(levelJson as Map<String, dynamic>),
-          )
-          .toList();
+      // Map<String, dynamic> listesini FillBlanksLevel listesine dönüştür
+      final levels = levelsData.map((data) {
+        // questions alanı JSON string olarak kaydedilmiş, parse et
+        final levelMap = Map<String, dynamic>.from(data);
+        if (levelMap['questions'] is String) {
+          levelMap['questions'] = json.decode(levelMap['questions']);
+        }
+        return FillBlanksLevel.fromJson(levelMap);
+      }).toList();
 
       setState(() {
         _levels = levels;
@@ -61,7 +58,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
       setState(() {
         _errorMessage =
             'Seviyeler yüklenemedi.\n'
-            'İnternet bağlantınızı kontrol edin.';
+            'Lütfen önce veri senkronizasyonunu yapın.';
         _isLoading = false;
       });
     }

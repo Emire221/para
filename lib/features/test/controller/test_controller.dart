@@ -86,6 +86,7 @@ class TestController extends StateNotifier<TestState> {
     final newWrongCount = !isCorrect ? state.wrongCount + 1 : state.wrongCount;
     final newScore = newCorrectCount * AppConstants.pointsPerCorrectAnswer;
 
+    // State'i güncelle (senkron işlem)
     state = state.copyWith(
       userAnswers: updatedAnswers,
       correctCount: newCorrectCount,
@@ -93,10 +94,12 @@ class TestController extends StateNotifier<TestState> {
       score: newScore,
     );
 
+    // ÖNEMLİ: State güncellemesi tamamlandıktan SONRA kontrol et
     // Sonraki soruya geç veya bitir
     if (state.currentQuestionIndex < state.questions.length - 1) {
       nextQuestion();
     } else {
+      // Son sorudayız, state zaten güncellendiği için finishTest güvenli
       finishTest();
     }
   }

@@ -12,7 +12,6 @@ abstract class IDatabaseHelper {
   Future<void> addDownloadedFile(String path);
   Future<void> insertDers(Map<String, dynamic> row);
   Future<void> insertKonu(Map<String, dynamic> row);
-  Future<void> insertVideo(Map<String, dynamic> row);
 }
 
 class DatabaseHelper implements IDatabaseHelper {
@@ -83,18 +82,6 @@ class DatabaseHelper implements IDatabaseHelper {
         konuID TEXT,
         kartAdi TEXT,
         kartlar TEXT, -- JSON String olarak saklanacak
-        FOREIGN KEY(konuID) REFERENCES Konular(konuID)
-      )
-    ''');
-
-    // Videolar Tablosu
-    await db.execute('''
-      CREATE TABLE Videolar(
-        videoID TEXT PRIMARY KEY,
-        konuID TEXT,
-        videoBaslik TEXT,
-        youtubeURL TEXT,
-        sure TEXT,
         FOREIGN KEY(konuID) REFERENCES Konular(konuID)
       )
     ''');
@@ -365,16 +352,6 @@ class DatabaseHelper implements IDatabaseHelper {
     );
   }
 
-  @override
-  Future<void> insertVideo(Map<String, dynamic> row) async {
-    Database db = await database;
-    await db.insert(
-      'Videolar',
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
   // Test için alias metod
   Future<int> insertFlashcard(Map<String, dynamic> row) async {
     Database db = await database;
@@ -430,7 +407,6 @@ class DatabaseHelper implements IDatabaseHelper {
       await txn.delete('Konular');
       await txn.delete('Testler');
       await txn.delete('BilgiKartlari');
-      await txn.delete('Videolar');
     });
   }
 

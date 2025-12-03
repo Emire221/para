@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/glass_container.dart';
 import '../services/data_service.dart';
-import 'video_player_screen.dart';
 import 'test_list_screen.dart';
 import 'flashcard_set_selection_screen.dart';
 import '../core/providers/user_provider.dart';
@@ -44,30 +43,6 @@ class _TopicSelectionScreenState extends ConsumerState<TopicSelectionScreen> {
     setState(() {
       _topics = topics;
     });
-  }
-
-  Future<void> _openVideo(String topicId, String topicName) async {
-    final userProfile = ref.read(userProfileProvider);
-    final userGrade = userProfile.value?['grade'] ?? '3. Sınıf';
-    final videoData = await _dataService.getTopicVideo(userGrade, topicId);
-
-    if (videoData != null && mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VideoPlayerScreen(
-            videoUrl: videoData['youtubeURL'],
-            videoTitle: videoData['videoBaslik'],
-          ),
-        ),
-      );
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Video bulunamadı')));
-      }
-    }
   }
 
   @override
@@ -146,35 +121,6 @@ class _TopicSelectionScreenState extends ConsumerState<TopicSelectionScreen> {
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                if (widget.mode == 'video' ||
-                                    widget.mode == 'all')
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _openVideo(
-                                        topic['konuID'],
-                                        topic['konuAdi'],
-                                      ),
-                                      icon: const Icon(
-                                        Icons.play_circle_outline,
-                                        size: 18,
-                                      ),
-                                      label: const Text(
-                                        'İzle',
-                                        style: TextStyle(fontSize: 12),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white
-                                            .withValues(alpha: 0.2),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                if (widget.mode == 'video' ||
-                                    widget.mode == 'all')
-                                  const SizedBox(width: 6),
                                 if (widget.mode == 'test' ||
                                     widget.mode == 'all')
                                   Expanded(

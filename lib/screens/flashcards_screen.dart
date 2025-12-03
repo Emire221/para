@@ -7,6 +7,7 @@ import '../providers/repository_providers.dart';
 import '../models/flashcard_model.dart';
 import '../core/providers/user_provider.dart';
 import '../services/database_helper.dart';
+import 'result_screen.dart';
 
 class FlashcardsScreen extends ConsumerStatefulWidget {
   final String? topicId;
@@ -200,9 +201,24 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
         _currentIndex++;
       });
 
-      // Eğer son kartsa ve henüz kaydedilmediyse sonuçları kaydet
+      // Eğer son kartsa ResultScreen'e yönlendir
       if (_currentIndex >= _allCards.length && !_resultsSaved) {
-        _saveResults();
+        await _saveResults();
+
+        // ResultScreen'e yönlendir
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultScreen(
+              score: _correctCount * 10, // Her doğru 10 puan
+              correctCount: _correctCount,
+              wrongCount: _wrongCount,
+              topicId: widget.topicId ?? '',
+              topicName: widget.topicName ?? 'Bilgi Kartları',
+              answeredQuestions: const [], // Flashcards'ta cevap anahtarı yok
+            ),
+          ),
+        );
       }
     }
   }
@@ -238,9 +254,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                       'Bu konuda henüz kart bulunmuyor.',
                       style: TextStyle(color: Colors.white, fontSize: 18),
                     )
-                  : _currentIndex < _allCards.length
-                  ? _buildCardWithInstructions()
-                  : _buildCompletionScreen(),
+                  : _buildCardWithInstructions(),
             ),
 
             // Feedback Overlay
@@ -457,43 +471,6 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompletionScreen() {
-    // Sonuçları kaydet
-    _saveResults();
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.check_circle, color: Colors.white, size: 80),
-        const SizedBox(height: 16),
-        const Text(
-          'Tüm Kartları Tamamladınız!',
-          style: TextStyle(color: Colors.white, fontSize: 24),
-        ),
-        const SizedBox(height: 30),
-        ElevatedButton.icon(
-          onPressed: () {
-            setState(() {
-              _currentIndex = 0;
-              _correctCount = 0;
-              _wrongCount = 0;
-            });
-          },
-          icon: const Icon(Icons.refresh),
-          label: const Text('Tekrar Başla'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-          ),
-        ),
-        const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Geri Dön', style: TextStyle(color: Colors.white)),
         ),
       ],
     );
