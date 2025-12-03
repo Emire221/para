@@ -22,8 +22,8 @@ class WeeklyExamService {
       const Duration(days: 2, hours: 23, minutes: 59, seconds: 59),
     );
 
-    // Pazar 20:00
-    final resultTime = examStart.add(const Duration(days: 6, hours: 20));
+    // Pazar 12:00
+    final resultTime = examStart.add(const Duration(days: 6, hours: 12));
 
     if (now.isBefore(examStart)) {
       return ExamRoomStatus.beklemede;
@@ -183,7 +183,7 @@ class WeeklyExamService {
     final examEnd = weekStart.add(
       const Duration(days: 2, hours: 23, minutes: 59, seconds: 59),
     );
-    final resultTime = weekStart.add(const Duration(days: 6, hours: 20));
+    final resultTime = weekStart.add(const Duration(days: 6, hours: 12));
 
     // Doğru/Yanlış/Boş hesapla
     int dogru = 0;
@@ -233,14 +233,14 @@ class WeeklyExamService {
     );
   }
 
-  /// Sonuçlar açıklandı mı kontrol et (Pazar 20:00)
+  /// Sonuçlar açıklandı mı kontrol et (Pazar 12:00)
   bool areResultsAvailable(DateTime weekStart) {
     final now = DateTime.now();
     final resultTime = DateTime(
       weekStart.year,
       weekStart.month,
       weekStart.day + 6, // Pazar
-      20, // 20:00
+      12, // 12:00
     );
     return now.isAfter(resultTime);
   }
@@ -272,17 +272,33 @@ class WeeklyExamService {
         return examEnd.difference(now);
 
       case ExamRoomStatus.kapali:
-        // Pazar 20:00'a kalan süre
+        // Pazar 12:00'a kalan süre
         final resultTime = DateTime(
           weekStart.year,
           weekStart.month,
           weekStart.day + 6,
-          20,
+          12,
         );
         return resultTime.difference(now);
 
       case ExamRoomStatus.sonuclanmis:
         return Duration.zero;
+    }
+  }
+
+  /// Bu haftanın sınavı mı kontrol et
+  bool isCurrentWeekExam(WeeklyExam exam) {
+    try {
+      final examWeekStart = DateTime.parse(exam.weekStart);
+      final thisWeekMonday = getThisWeekMonday();
+
+      // Aynı hafta mı kontrol et (yıl, ay, gün)
+      return examWeekStart.year == thisWeekMonday.year &&
+          examWeekStart.month == thisWeekMonday.month &&
+          examWeekStart.day == thisWeekMonday.day;
+    } catch (e) {
+      debugPrint('Tarih parse hatası: $e');
+      return false;
     }
   }
 }

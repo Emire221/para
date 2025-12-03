@@ -23,6 +23,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
   WeeklyExamResult? _userResult;
   Timer? _timer;
   Duration _remaining = Duration.zero;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -39,24 +40,51 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _updateStatus();
+      if (_exam != null && !_isLoading) {
+        _updateStatus();
+      }
     });
   }
 
   Future<void> _loadExamData() async {
-    final exam = await _examService.loadWeeklyExam();
-    if (exam != null && mounted) {
-      final hasCompleted = await _examService.hasUserCompletedExam(exam.examId);
-      final result = hasCompleted
-          ? await _examService.getUserExamResult(exam.examId)
-          : null;
+    setState(() => _isLoading = true);
 
-      setState(() {
-        _exam = exam;
-        _hasCompleted = hasCompleted;
-        _userResult = result;
-      });
-      _updateStatus();
+    try {
+      final exam = await _examService.loadWeeklyExam();
+
+      if (exam != null && mounted) {
+        // Sınavı yükle - artık hafta kontrolü YAPMIYORUZ
+        // Sınav her zaman gösterilecek, sadece durum değişecek
+        final hasCompleted = await _examService.hasUserCompletedExam(
+          exam.examId,
+        );
+        final result = hasCompleted
+            ? await _examService.getUserExamResult(exam.examId)
+            : null;
+
+        if (mounted) {
+          setState(() {
+            _exam = exam;
+            _hasCompleted = hasCompleted;
+            _userResult = result;
+            _isLoading = false;
+          });
+          _updateStatus();
+        }
+
+        debugPrint('Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted');
+      } else {
+        // Sınav yok - kart yine de gösterilecek
+        setState(() {
+          _exam = null;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Sınav yükleme hatası: $e');
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -91,8 +119,22 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Yükleniyor durumu
+    if (_isLoading) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Sınav yoksa "Henüz sınav yayınlanmadı" kartı göster
     if (_exam == null) {
-      return const SizedBox.shrink(); // Sınav yoksa gösterme
+      return _buildNoExamCard();
     }
 
     return Container(
@@ -170,7 +212,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        _status.label,
+                        _hasCompleted ? 'Tamamlandı ✓' : _status.label,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -221,10 +263,14 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
 
                     // Aksiyon butonu
                     ElevatedButton(
-                      onPressed: _onCardTap,
+                      onPressed: _canTakeAction() ? _onCardTap : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: _getMainColor(),
+                        disabledBackgroundColor: Colors.white.withValues(
+                          alpha: 0.5,
+                        ),
+                        disabledForegroundColor: Colors.grey,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -292,6 +338,105 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
     );
   }
 
+  /// Sınav yokken gösterilecek kart
+  Widget _buildNoExamCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.grey.shade400, Colors.grey.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.event_busy,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Türkiye Geneli Deneme',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _examService.generateRoomName(
+                          _examService.getThisWeekMonday(),
+                        ),
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Bekleniyor',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Henüz bu hafta için sınav yayınlanmadı. Yakında burada olacak! 📚',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 15,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatItem(String label, String value, Color color) {
     return Column(
       children: [
@@ -315,7 +460,44 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
     );
   }
 
+  /// Kullanıcı bir aksiyon alabilir mi?
+  bool _canTakeAction() {
+    if (_isLoading || _exam == null) return false;
+
+    // Sınav tamamlandıysa ve sonuçlar açıklandıysa -> sonuçları görebilir
+    if (_hasCompleted && _status == ExamRoomStatus.sonuclanmis) {
+      return true;
+    }
+
+    // Sınav tamamlandıysa ve sonuçlar henüz açıklanmadıysa -> HİÇBİR AKSİYON YOK
+    if (_hasCompleted) {
+      return false;
+    }
+
+    // Sınav aktifse ve tamamlanmamışsa -> sınava girebilir
+    if (_status == ExamRoomStatus.aktif) {
+      return true;
+    }
+
+    // Sonuçlar açıklandıysa ve tamamlanmamışsa -> sonuçları görebilir
+    if (_status == ExamRoomStatus.sonuclanmis) {
+      return true;
+    }
+
+    // Beklemede veya kapalı -> aksiyon yok
+    return false;
+  }
+
   LinearGradient _getGradient() {
+    // Sınav tamamlandıysa ve sonuçlar açıklanmadıysa özel renk
+    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
+      return LinearGradient(
+        colors: [Colors.teal.shade400, Colors.teal.shade700],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+
     switch (_status) {
       case ExamRoomStatus.beklemede:
         return LinearGradient(
@@ -345,6 +527,11 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
   }
 
   Color _getMainColor() {
+    // Sınav tamamlandıysa ve sonuçlar açıklanmadıysa özel renk
+    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
+      return Colors.teal.shade600;
+    }
+
     switch (_status) {
       case ExamRoomStatus.beklemede:
         return Colors.blue.shade600;
@@ -358,6 +545,11 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
   }
 
   IconData _getStatusIcon() {
+    // Sınav tamamlandıysa check ikonu
+    if (_hasCompleted) {
+      return Icons.check_circle;
+    }
+
     switch (_status) {
       case ExamRoomStatus.beklemede:
         return Icons.schedule;
@@ -375,7 +567,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
       if (_status == ExamRoomStatus.sonuclanmis) {
         return 'Tüm Türkiye\'de kaçıncı sıradasın, baktın mı? 🏆';
       }
-      return 'Sınavı tamamladın! Sonuçlar Pazar 20:00\'da açıklanacak. ⏳';
+      return 'Sınavı tamamladın! Sonuçlar Pazar 12:00\'da açıklanacak. ⏳';
     }
     return _status.motivationMessage;
   }
@@ -385,7 +577,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
       if (_status == ExamRoomStatus.sonuclanmis) {
         return 'Sonuçları Gör';
       }
-      return 'Cevaplarım';
+      return 'Bekle...';
     }
 
     switch (_status) {
@@ -402,7 +594,10 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
 
   IconData _getButtonIcon() {
     if (_hasCompleted) {
-      return Icons.visibility;
+      if (_status == ExamRoomStatus.sonuclanmis) {
+        return Icons.visibility;
+      }
+      return Icons.hourglass_empty;
     }
 
     switch (_status) {
@@ -420,7 +615,20 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
   void _onCardTap() {
     if (_exam == null) return;
 
-    // Sonuçlar açıklandıysa sonuç ekranına git
+    // ÖNCELİK 1: Sınav tamamlandıysa ve sonuçlar HENÜZ açıklanmadıysa -> ENGELLE
+    if (_hasCompleted && _status != ExamRoomStatus.sonuclanmis) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Bu sınavı zaten tamamladın! Sonuçlar Pazar 12:00\'da açıklanacak.',
+          ),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // ÖNCELİK 2: Sonuçlar açıklandıysa sonuç ekranına git
     if (_status == ExamRoomStatus.sonuclanmis) {
       Navigator.push(
         context,
@@ -465,7 +673,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
       // Sınavı çözdü ama sonuçlar henüz açıklanmadı
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sonuçlar Pazar 20:00\'da açıklanacak!'),
+          content: Text('Sonuçlar Pazar 12:00\'da açıklanacak!'),
           duration: Duration(seconds: 2),
         ),
       );

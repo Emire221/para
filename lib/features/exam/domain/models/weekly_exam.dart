@@ -55,7 +55,7 @@ class WeeklyExamResult with _$WeeklyExamResult {
     required String odaIsmi, // "Hafta 45 - 2025" gibi
     required String odaBaslangic, // ISO 8601
     required String odaBitis, // ISO 8601 (Çarşamba 23:59)
-    required String sonucTarihi, // Pazar 20:00
+    required String sonucTarihi, // Pazar 12:00
     required String odaDurumu, // "aktif", "kapali", "sonuclanmis"
     required String kullaniciId,
     required Map<String, String> cevaplar, // {"1": "A", "2": "EMPTY"}
@@ -102,7 +102,7 @@ extension ExamRoomStatusExtension on ExamRoomStatus {
       case ExamRoomStatus.aktif:
         return 'Hadi sınava gir! Çarşambaya kadar vaktin var.';
       case ExamRoomStatus.kapali:
-        return 'Sonuçlar Pazar 20:00\'da açıklanacak!';
+        return 'Sonuçlar Pazar 12:00\'da açıklanacak!';
       case ExamRoomStatus.sonuclanmis:
         return 'Tüm Türkiye\'de kaçıncı sıradasın, baktın mı?';
     }

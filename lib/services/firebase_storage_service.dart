@@ -371,9 +371,15 @@ class FirebaseStorageService {
               if (examData.containsKey('questions')) {
                 examData['questions'] = json.encode(examData['questions']);
               }
+
+              // Önce eski sınav verilerini sil, sonra yenisini ekle
+              final newExamId = examData['weeklyExamId'] as String;
+              await _dbHelper.clearOldWeeklyExamData(newExamId);
               await _dbHelper.insertWeeklyExam(examData);
               processedWeeklyExams++;
-              debugPrint('Haftalık Sınav işlendi: $fileName');
+              debugPrint(
+                'Haftalık Sınav işlendi (eski veriler silindi): $fileName',
+              );
             }
             // Ne test ne bilgi kartı ne de oyun dosyası değilse
             else {

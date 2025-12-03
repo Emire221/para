@@ -10,6 +10,7 @@ abstract class IDatabaseHelper {
   Future<void> insertArenaSet(Map<String, dynamic> row);
   Future<void> insertWeeklyExam(Map<String, dynamic> row);
   Future<Map<String, dynamic>?> getLatestWeeklyExam();
+  Future<void> clearOldWeeklyExamData(String newExamId);
   Future<void> clearAllData();
   Future<void> addDownloadedFile(String path);
   Future<void> insertDers(Map<String, dynamic> row);
@@ -465,6 +466,30 @@ class DatabaseHelper implements IDatabaseHelper {
       limit: 1,
     );
     return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Eski haftalık sınav verilerini temizle
+  /// Yeni sınav geldiğinde eski sınav ve sonuçlarını siler
+  /// @param newExamId: Yeni gelen sınavın ID'si - bu silinmeyecek
+  @override
+  Future<void> clearOldWeeklyExamData(String newExamId) async {
+    Database db = await database;
+
+    await db.transaction((txn) async {
+      // Yeni sınav dışındaki tüm sınavları sil
+      await txn.delete(
+        'WeeklyExams',
+        where: 'weeklyExamId != ?',
+        whereArgs: [newExamId],
+      );
+
+      // Yeni sınav dışındaki tüm sonuçları sil
+      await txn.delete(
+        'WeeklyExamResults',
+        where: 'examId != ?',
+        whereArgs: [newExamId],
+      );
+    });
   }
 
   // Bildirimler için CRUD Metotları
