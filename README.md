@@ -3,9 +3,10 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.9.2-02569B?logo=flutter)](https://flutter.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Enabled-FFCA28?logo=firebase)](https://firebase.google.com)
 [![Tests](https://img.shields.io/badge/Tests-33%20Passing-success)](./test_report.txt)
+[![Quality](https://img.shields.io/badge/Analysis-No%20Issues-success)](./analyze_output.txt)
 [![License](https://img.shields.io/badge/License-Private-red)]()
 
-**BİLGİ AVCISI**, Türk öğrenciler için geliştirilmiş kapsamlı bir mobil eğitim platformudur. Sınıf bazlı içerik, interaktif testler, bilgi kartları ve video derslerle öğrenmeyi kolaylaştırır.
+**BİLGİ AVCISI**, Türk öğrenciler için geliştirilmiş kapsamlı bir mobil eğitim platformudur. Sınıf bazlı içerik, interaktif testler, bilgi kartları ve gamification özellikleriyle öğrenmeyi kolaylaştırır.
 
 ---
 
@@ -18,7 +19,7 @@
 - [Proje Yapısı](#-proje-yapısı)
 - [Sync Sistemi](#-sync-sistemi)
 - [Testler](#-testler)
-- [Katkıda Bulunma](#-katkıda-bulunma)
+- [Son Güncellemeler](#-son-güncellemeler)
 
 ---
 
@@ -27,28 +28,31 @@
 ### 🎯 Eğitim İçeriği
 - **Sınıf Bazlı Organizasyon**: Her sınıf için özel içerik
 - **Ders Kategorileri**: Matematik, Fen, Türkçe, Sosyal Bilimler ve daha fazlası
-- **İnteraktif Testler**: Zorluk seviyelerine göre sınıflandırılmış testler
+- ** İnteraktif Testler**: Zorluk seviyelerine göre sınıflandırılmış testler
 - **Bilgi Kartları (Flashcards)**: Konuları pekiştirmek için swipe-tabanlı kartlar
-- **Video Dersler**: YouTube entegrasyonu ile video içerik
+- **Sonuç Ekranları**: Detaylı puan ve istatistik gösterimi
 
 ### 📱 Kullanıcı Deneyimi
 - **Profil Yönetimi**: Öğrenci bilgilerini kaydetme ve takip
 - **İlerleme Takibi**: Test sonuçları ve öğrenme geçmişi
-- **Karanlık Mod**: Göz dostu arayüz
+- **Karanlık Mod**: Optimize edilmiş göz dostu arayüz
 - **Offline Desteği**: İnternetsiz çalışabilme
 - **Bildirimler**: Yeni içerik ve hatırlatmalar
+- **Türkçe Localization**: Tam Türkçe tarih ve zaman desteği
 
 ### 🎮 Gamification
 - **"Bunu Biliyor Musun?"**: Günlük ilginç bilgiler
 - **Salla ve Çöz**: Shake gesture ile rastgele soru
-- **Cümle Tamamlama**: Drag & drop oyunu
-- **Arena Modu**: Fake live duel sistemi
+- **Cümle Tamamlama**: Drag & drop oyunu (veritabanı entegreli)
+- **Arena Modu**: Fake live duel sistemi (veritabanı entegreli)
+- **Maskot Sistemi**: Öğrenme sürecinde eşlik eden sanal arkadaş
 
 ### 🔄 Akıllı Sync Sistemi
 - **Manifest Tabanlı**: Sadece yeni içerikleri indirir
 - **Haftalık Güncellemeler**: Otomatik içerik güncellemeleri
 - **tar.bz2 Formatı**: Optimize edilmiş sıkıştırma
 - **İnkremental Sync**: Bandwidth tasarrufu
+- **Veritabanı İlk Depolama**: Tüm oyun içerikleri lokal SQLite'ta
 
 ---
 
@@ -78,14 +82,13 @@
 - **Google Fonts** `^6.2.1` - Özel fontlar
 - **Lottie** `^3.1.0` - Animasyonlar
 - **Cached Network Image** `^3.4.1` - Resim cache
-- **YouTube Player** `^9.1.3` - Video oynatıcı
 
 ### Utilities
 - **Archive** `^3.3.7` - tar.bz2 sıkıştırma/açma desteği
 - **Logger** `^2.5.0` - Logging
 - **Timezone** `^0.9.2` - Zaman dilimi yönetimi
 - **Shake** `^3.0.0` - Shake gesture detection
-- **Intl** `^0.19.0` - Internationalization
+- **Intl** `^0.19.0` - Internationalization (Türkçe desteği)
 
 ### Development
 - **Build Runner** `^2.4.13` - Code generation
@@ -103,27 +106,30 @@ Proje **Clean Architecture** prensiplerine göre organize edilmiştir:
 lib/
 ├── core/                    # Temel yapılar
 │   ├── constants/          # Sabitler
+│   ├── providers/          # Global provider'lar
 │   ├── theme/              # Tema yapılandırması
 │   └── utils/              # Yardımcı fonksiyonlar
 │
 ├── features/               # Özellik modülleri
 │   ├── auth/              # Kimlik doğrulama
-│   ├── home/              # Ana sayfa
-│   ├── profile/           # Profil yönetimi
-│   ├── lessons/           # Ders listesi
-│   ├── tests/             # Test modülü
-│   ├── flashcards/        # Bilgi kartları
+│   ├── mascot/            # Maskot sistemi
+│   │   ├── domain/        # Entities & Repository interfaces
+│   │   ├── data/          # Repository implementations
+│   │   └── presentation/  # UI & Controllers
+│   ├── test/              # Test modülü
+│   │   ├── domain/
+│   │   ├── controller/
+│   │   └── presentation/
 │   ├── games/             # Mini oyunlar
+│   │   ├── fill_blanks/  # Cümle tamamlama
+│   │   └── arena/        # Arena düello
 │   └── sync/              # Senkronizasyon
-│       ├── domain/        # Business logic
-│       ├── presentation/  # UI & Controllers
-│       └── data/          # Data sources
 │
 ├── models/                # Veri modelleri (Freezed)
 │   ├── lesson.dart
 │   ├── topic.dart
 │   ├── test.dart
-│   ├── flashcard_set.dart
+│   ├── flashcard_model.dart
 │   └── ...
 │
 ├── repositories/          # Veri erişim katmanı
@@ -134,19 +140,20 @@ lib/
 ├── services/              # Servisler
 │   ├── firebase_storage_service.dart
 │   ├── database_helper.dart
-│   ├── sync_service.dart
+│   ├── data_service.dart
 │   ├── notification_service.dart
 │   └── ...
 │
 ├── screens/               # UI Ekranları
-│   ├── home_screen.dart
+│   ├── main_screen.dart
 │   ├── test_screen.dart
 │   ├── flashcards_screen.dart
+│   ├── result_screen.dart
 │   └── ...
 │
 ├── widgets/               # Yeniden kullanılabilir widget'lar
+│   ├── glass_container.dart
 │   ├── custom_button.dart
-│   ├── question_card.dart
 │   └── ...
 │
 └── main.dart              # Uygulama giriş noktası
@@ -183,8 +190,8 @@ Firebase Storage (tar.bz2)
 
 1. **Repository'yi klonlayın**
    ```bash
-   git clone https://github.com/Emire221/sonkineson.git
-   cd sonkineson
+   git clone https://github.com/Emire221/para.git
+   cd para
    ```
 
 2. **Bağımlılıkları yükleyin**
@@ -226,21 +233,14 @@ flutter test --coverage
 flutter analyze
 
 # Lint kontrolleri
-flutter analyze --no-pub
+flutter analyze --no-fatal-warnings
 ```
+
+**Güncel Durum:** ✅ No issues found!
 
 ---
 
 ## 📁 Proje Yapısı
-
-### Temel Dosyalar
-
-| Dosya | Açıklama |
-|-------|----------|
-| `pubspec.yaml` | Proje bağımlılıkları ve metadata |
-| `analysis_options.yaml` | Lint kuralları |
-| `firebase_options.dart` | Firebase yapılandırması |
-| `main.dart` | Uygulama giriş noktası |
 
 ### Veritabanı Şeması (SQLite)
 
@@ -282,10 +282,47 @@ CREATE TABLE BilgiKartlari (
   FOREIGN KEY(konuID) REFERENCES Konular(konuID)
 );
 
--- İndirilen Dosyalar (Sync için)
-CREATE TABLE DownloadedFiles (
-  path TEXT PRIMARY KEY,
-  downloadedAt DATETIME
+-- Fill Blanks Levels
+CREATE TABLE FillBlanksLevels (
+  levelID TEXT PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  difficulty INTEGER,
+  category TEXT,
+  questions TEXT -- JSON
+);
+
+-- Arena Sets
+CREATE TABLE ArenaSets (
+  arenaSetID TEXT PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  difficulty INTEGER,
+  category TEXT,
+  questions TEXT -- JSON
+);
+
+-- Game Results
+CREATE TABLE GameResults (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  gameType TEXT NOT NULL,
+  score INTEGER,
+  correctCount INTEGER,
+  wrongCount INTEGER,
+  totalQuestions INTEGER,
+  completedAt TEXT,
+  details TEXT
+);
+
+-- User Pets (Maskot)
+CREATE TABLE UserPets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  petType TEXT NOT NULL,
+  petName TEXT NOT NULL,
+  currentXp INTEGER DEFAULT 0,
+  level INTEGER DEFAULT 1,
+  mood INTEGER DEFAULT 100,
+  createdAt TEXT DEFAULT (datetime('now'))
 );
 ```
 
@@ -302,21 +339,14 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
 ```json
 {
   "version": "v2.0",
-  "updatedAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-12-03T10:00:00Z",
   "files": [
     {
       "path": "3_Sinif/hafta_1.tar.bz2",
       "type": "tar.bz2",
       "version": "v1",
       "hash": "abc123...",
-      "addedAt": "2024-01-15T10:00:00Z"
-    },
-    {
-      "path": "3_Sinif/konulistesi.json",
-      "type": "json",
-      "version": "v1",
-      "hash": "def456...",
-      "addedAt": "2024-01-15T10:00:00Z"
+      "addedAt": "2024-12-03T10:00:00Z"
     }
   ]
 }
@@ -337,31 +367,10 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
    ↓
 6. Dosyaları Çıkart
    ↓
-7. SQLite'a Kaydet
+7. SQLite'a Kaydet (Oyun verileri de dahil)
    ↓
 8. Local Manifest Güncelle
 ```
-
-#### 3. tar.bz2 Format Desteği
-
-```dart
-// BZip2 + Tar codec kullanımı
-final decompressed = BZip2Decoder().decodeBytes(data);
-final archive = TarDecoder().decodeBytes(decompressed);
-
-// Dosyaları çıkart
-for (final file in archive.files) {
-  if (file.isFile) {
-    await File(outPath).writeAsBytes(file.content);
-  }
-}
-```
-
-### Haftalık Güncellemeler
-
-- **Zamanlama**: Her Pazartesi 00:00
-- **Bildirim**: Kullanıcıya push notification
-- **Opsiyonel**: Manuel güncelleme veya erteleme
 
 ---
 
@@ -373,37 +382,6 @@ for (final file in archive.files) {
 - **Başarı Oranı**: %100
 - **Coverage**: Unit, Widget, Integration
 
-### Test Kategorileri
-
-#### 1. Service Tests
-```dart
-test('processLocalArchiveContent parses and inserts data correctly', () async {
-  // Firebase Storage Service testleri
-  // tar.bz2 açma, parsing, DB kaydetme
-});
-```
-
-#### 2. Repository Tests
-```dart
-test('flashcard repository fetches data correctly', () async {
-  // Repository pattern testleri
-});
-```
-
-#### 3. Widget Tests
-```dart
-testWidgets('Test screen displays questions', (WidgetTester tester) async {
-  // UI widget testleri
-});
-```
-
-#### 4. Controller Tests
-```dart
-test('sync controller handles manifest correctly', () async {
-  // State management testleri
-});
-```
-
 ---
 
 ## 📊 Kod Kalitesi
@@ -412,93 +390,46 @@ test('sync controller handles manifest correctly', () async {
 
 ```
 ✅ No issues found!
-📊 Analyzed in 68.1s
+📊 Analyzed in 3.1s
 🧪 33/33 tests passing
 📈 100% success rate
 ```
 
-### Lint Kuralları
-
-Proje `flutter_lints ^5.0.0` kullanır:
-- Naming conventions
-- Type safety
-- Best practices
-- Code organization
-
 ---
 
-## 🎨 Kullanıcı Arayüzü
+## 📝 Son Güncellemeler
 
-### Ekranlar
+### [v1.1.0] - 2024-12-03
 
-| Ekran | Açıklama |
-|-------|----------|
-| **Onboarding** | İlk açılış animasyonu (Lottie) |
-| **Profile Setup** | Kullanıcı bilgileri girişi |
-| **Home** | Ana sayfa - ders kategorileri |
-| **Lessons** | Ders listesi |
-| **Topics** | Konu listesi |
-| **Tests** | Test çözme ekranı |
-| **Flashcards** | Bilgi kartları (swipe) |
-| **Results** | Test sonuçları |
-| **Arena** | Duel oyunu |
-| **Settings** | Ayarlar |
+#### Added ✨
+- **Maskot Sistemi**: Öğrencilere eşlik eden sanal arkadaş
+- **ResultScreen Entegrasyonu**: Flashcards için detaylı sonuç ekranı
+- **Türkçe Localization**: İntl paketi ile tam Türkçe tarih desteği
+- **Oyun Veritabanı Entegrasyonu**: Fill Blanks ve Arena artık lokal veritabanından veri okuyor
 
-### Tema
+#### Fixed 🐛
+- **Navigasyon İyileştirmesi**: Profil kurulumu sonrası geri butonu kaldırıldı (pushAndRemoveUntil)
+- **Karanlık Mod**: AppBar metinlerinin kontrast sorunu düzeltildi
+- **Test Puanlama**: Race condition çözüldü, son soru artık doğru puanlanıyor
+- **Localization Crash**: Başarılarım ekranındaki LocaleDataException hatası giderildi
+- **Async Gap Handling**: BuildContext kullanımında mounted kontrolü eklendi
 
-- **Primary Color**: Özelleştirilebilir
-- **Dark Mode**: Desteklenir
-- **Google Fonts**: Modern tipografi
-- **Animations**: Lottie ve Flutter animasyonları
+#### Removed 🗑️
+- **Video Özelliği**: Kullanılmayan "Gizli İpuçları İzle" özelliği tamamen kaldırıldı
+  - video_player_screen.dart silindi
+  - Videolar tablosu kaldırıldı
+  - 304 satır kod temizlendi
 
----
+#### Changed 🔄
+- **Firebase Storage Service**: levelID → id dönüşümü kaldırıldı, veriler olduğu gibi kaydediliyor
+- **Oyun Ekranları**: Firebase'den Firebase Storage yerine DatabaseHelper kullanıyor
 
-## 🔐 Güvenlik
-
-- **Firebase Auth**: Güvenli kimlik doğrulama
-- **Secure Storage**: Hassas verilerin şifrelenmesi
-- **Input Validation**: Form doğrulama
-- **Error Handling**: Kapsamlı hata yönetimi
-
----
-
-## 🚀 Deployment
-
-### Android
-
-```bash
-flutter build apk --release
-# veya
-flutter build appbundle --release
-```
-
-### iOS
-
-```bash
-flutter build ios --release
-```
-
----
-
-## 📝 Değişiklik Geçmişi
-
-### [v1.0.0] - 2024-11-28
-
-#### Added
-- ✨ tar.bz2 format desteği (zip'den migration)
-- ✨ Manifest tabanlı sync sistemi
-- ✨ Haftalık otomatik güncellemeler
-- ✨ Gamification özellikleri
-- ✨ Comprehensive test suite
-
-#### Changed  
-- 🔄 Storage formatı: .zip → .tar.bz2
-- 🔄 Decoder: ZipDecoder → BZip2Decoder + TarDecoder
-- 🔄 Sync logic: Full download → Incremental sync
-
-#### Fixed
-- 🐛 Test compatibility with new archive format
-- 🐛 Android local.properties issue
+### İstatistikler
+- 📝 13 dosya güncellendi
+- 🗑️ 1 dosya silindi
+- ➕ 61 satır eklendi
+- ➖ 304 satır silindi
+- ✅ 0 lint hatası
 
 ---
 
@@ -516,7 +447,7 @@ Bu proje özel mülkiyettir. Tüm hakları saklıdır.
 
 ## 📞 İletişim
 
-- **Repository**: [github.com/Emire221/sonkineson](https://github.com/Emire221/sonkineson)
+- **Repository**: [github.com/Emire221/para](https://github.com/Emire221/para)
 - **Issues**: GitHub Issues'ı kullanın
 
 ---
@@ -531,8 +462,8 @@ Bu proje özel mülkiyettir. Tüm hakları saklıdır.
 ---
 
 **Geliştirici**: Emire221  
-**Son Güncelleme**: 28 Kasım 2024  
-**Versiyon**: 1.0.0
+**Son Güncelleme**: 3 Aralık 2024  
+**Versiyon**: 1.1.0
 
 ---
 
