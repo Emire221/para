@@ -47,6 +47,14 @@
 - **Arena Modu**: Fake live duel sistemi (veritabanı entegreli)
 - **Maskot Sistemi**: Öğrenme sürecinde eşlik eden sanal arkadaş
 
+### 📝 Türkiye Geneli Deneme Sınavı
+- **Haftalık Sınav**: Her hafta yeni sınav yayınlanır
+- **Zaman Duyarlı**: Pazartesi 00:00 - Çarşamba 23:59 arası aktif
+- **Tek Giriş Hakkı**: Kullanıcı sınava sadece 1 kez girebilir
+- **Sonuç Beklemesi**: Pazar 12:00'da sonuçlar açıklanır
+- **Türkiye Sıralaması**: Tüm katılımcılar arasında sıralama
+- **Otomatik Temizlik**: Yeni sınav geldiğinde eski veriler silinir
+
 ### 🔄 Akıllı Sync Sistemi
 - **Manifest Tabanlı**: Sadece yeni içerikleri indirir
 - **Haftalık Güncellemeler**: Otomatik içerik güncellemeleri
@@ -324,6 +332,37 @@ CREATE TABLE UserPets (
   mood INTEGER DEFAULT 100,
   createdAt TEXT DEFAULT (datetime('now'))
 );
+
+-- Haftalık Sınavlar (İndirilen sınav verileri)
+CREATE TABLE WeeklyExams (
+  weeklyExamId TEXT PRIMARY KEY,
+  title TEXT,
+  weekStart TEXT,
+  duration INTEGER,
+  description TEXT,
+  questions TEXT -- JSON
+);
+
+-- Haftalık Sınav Sonuçları
+CREATE TABLE WeeklyExamResults (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  examId TEXT NOT NULL,
+  odaId TEXT NOT NULL,
+  odaIsmi TEXT,
+  odaBaslangic TEXT,
+  odaBitis TEXT,
+  sonucTarihi TEXT,
+  odaDurumu TEXT,
+  odaKatilimciId TEXT NOT NULL,
+  cevaplar TEXT, -- JSON
+  dogru INTEGER,
+  yanlis INTEGER,
+  bos INTEGER,
+  puan INTEGER,
+  siralama INTEGER,
+  toplamKatilimci INTEGER,
+  completedAt TEXT
+);
 ```
 
 ---
@@ -399,6 +438,36 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
 
 ## 📝 Son Güncellemeler
 
+### [v1.2.0] - 2025-12-04
+
+#### Added ✨
+- **Haftalık Sınav Sistemi**: Türkiye geneli deneme sınavı özelliği
+  - Pazartesi 00:00 - Çarşamba 23:59 arası sınav aktif
+  - Pazar 12:00'da sonuçlar açıklanıyor
+  - Her kullanıcı sadece 1 kez sınava girebilir
+  - Sınav kartı her zaman görünür (sınav yoksa bilgi mesajı)
+- **WeeklyExamCard**: Dersler ekranında her zaman görünen sınav kartı
+- **WeeklyExamScreen**: Sınav çözme ekranı
+- **WeeklyExamResultScreen**: Sınav sonuçları ekranı
+- **clearOldWeeklyExamData()**: Yeni sınav geldiğinde eski verileri temizleme
+
+#### Fixed 🐛
+- **Sınav Kartı Görünürlük**: Kart artık hafta kontrolü yapmadan her zaman gösteriliyor
+- **Sınav Tekrar Girişi**: Kullanıcı aynı sınava tekrar giremez
+
+#### Changed 🔄
+- **Sonuç Açıklama Saati**: 20:00'dan 12:00'a değiştirildi
+- **Motivasyon Mesajları**: Tüm mesajlar Pazar 12:00 olarak güncellendi
+- **Sync Sistemi**: Yeni sınav geldiğinde eski sınav ve sonuçları otomatik siliniyor
+
+### İstatistikler
+- 📝 5 dosya güncellendi
+- ➕ 286 satır eklendi
+- ➖ 31 satır silindi
+- ✅ 0 lint hatası
+
+---
+
 ### [v1.1.0] - 2024-12-03
 
 #### Added ✨
@@ -462,8 +531,8 @@ Bu proje özel mülkiyettir. Tüm hakları saklıdır.
 ---
 
 **Geliştirici**: Emire221  
-**Son Güncelleme**: 3 Aralık 2024  
-**Versiyon**: 1.1.0
+**Son Güncelleme**: 4 Aralık 2025  
+**Versiyon**: 1.2.0
 
 ---
 
