@@ -1,0 +1,229 @@
+{
+  "examId": "haftalik_2024_w49",
+  "title": "Haftalık Bilgi Yarışması - Hafta 49",
+  "weekStart": "2024-12-02",
+  "duration": 30,
+  "description": "Bu haftanın konuları: Türkiye Coğrafyası, Matematik ve Genel Kültür",
+  "questions": [
+    {
+      "questionId": "1",
+      "questionText": "Türkiye'nin en uzun nehri hangisidir?",
+      "optionA": "Sakarya Nehri",
+      "optionB": "Kızılırmak",
+      "optionC": "Fırat Nehri",
+      "optionD": "Yeşilırmak",
+      "correctAnswer": "B",
+      "topicId": "cografya_turkiye",
+      "lessonName": "Coğrafya"
+    },
+    {
+      "questionId": "2",
+      "questionText": "5² + 3² işleminin sonucu kaçtır?",
+      "optionA": "25",
+      "optionB": "34",
+      "optionC": "64",
+      "optionD": "16",
+      "correctAnswer": "B",
+      "topicId": "matematik_temel",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "3",
+      "questionText": "Türkiye'nin başkenti hangi yıl Ankara olmuştur?",
+      "optionA": "1920",
+      "optionB": "1921",
+      "optionC": "1922",
+      "optionD": "1923",
+      "correctAnswer": "D",
+      "topicId": "tarih_cumhuriyet",
+      "lessonName": "Tarih"
+    },
+    {
+      "questionId": "4",
+      "questionText": "Aşağıdakilerden hangisi bir iç denizdir?",
+      "optionA": "Akdeniz",
+      "optionB": "Karadeniz",
+      "optionC": "Hazar Denizi",
+      "optionD": "Kızıldeniz",
+      "correctAnswer": "C",
+      "topicId": "cografya_dunya",
+      "lessonName": "Coğrafya"
+    },
+    {
+      "questionId": "5",
+      "questionText": "144 sayısının karekökü kaçtır?",
+      "optionA": "11",
+      "optionB": "12",
+      "optionC": "13",
+      "optionD": "14",
+      "correctAnswer": "B",
+      "topicId": "matematik_temel",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "6",
+      "questionText": "İstiklal Marşı hangi yıl kabul edilmiştir?",
+      "optionA": "1920",
+      "optionB": "1921",
+      "optionC": "1922",
+      "optionD": "1923",
+      "correctAnswer": "B",
+      "topicId": "tarih_cumhuriyet",
+      "lessonName": "Tarih"
+    },
+    {
+      "questionId": "7",
+      "questionText": "Türkiye'nin en yüksek dağı hangisidir?",
+      "optionA": "Kaçkar Dağı",
+      "optionB": "Erciyes Dağı",
+      "optionC": "Ağrı Dağı",
+      "optionD": "Uludağ",
+      "correctAnswer": "C",
+      "topicId": "cografya_turkiye",
+      "lessonName": "Coğrafya"
+    },
+    {
+      "questionId": "8",
+      "questionText": "7 × 8 işleminin sonucu kaçtır?",
+      "optionA": "54",
+      "optionB": "56",
+      "optionC": "58",
+      "optionD": "63",
+      "correctAnswer": "B",
+      "topicId": "matematik_temel",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "9",
+      "questionText": "Cumhuriyetin ilanından sonra ilk Cumhurbaşkanı kim olmuştur?",
+      "optionA": "İsmet İnönü",
+      "optionB": "Mustafa Kemal Atatürk",
+      "optionC": "Celal Bayar",
+      "optionD": "Fevzi Çakmak",
+      "correctAnswer": "B",
+      "topicId": "tarih_cumhuriyet",
+      "lessonName": "Tarih"
+    },
+    {
+      "questionId": "10",
+      "questionText": "Hangi gezegen Güneş'e en yakındır?",
+      "optionA": "Venüs",
+      "optionB": "Mars",
+      "optionC": "Merkür",
+      "optionD": "Dünya",
+      "correctAnswer": "C",
+      "topicId": "fen_uzay",
+      "lessonName": "Fen Bilgisi"
+    },
+    {
+      "questionId": "11",
+      "questionText": "Aşağıdaki kesirlerden hangisi en büyüktür?",
+      "optionA": "1/2",
+      "optionB": "2/3",
+      "optionC": "3/4",
+      "optionD": "4/5",
+      "correctAnswer": "D",
+      "topicId": "matematik_kesirler",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "12",
+      "questionText": "Su kaç derecede kaynar?",
+      "optionA": "90°C",
+      "optionB": "100°C",
+      "optionC": "110°C",
+      "optionD": "120°C",
+      "correctAnswer": "B",
+      "topicId": "fen_madde",
+      "lessonName": "Fen Bilgisi"
+    },
+    {
+      "questionId": "13",
+      "questionText": "Türkiye hangi kıtada yer alır?",
+      "optionA": "Sadece Asya",
+      "optionB": "Sadece Avrupa",
+      "optionC": "Asya ve Avrupa",
+      "optionD": "Asya ve Afrika",
+      "correctAnswer": "C",
+      "topicId": "cografya_turkiye",
+      "lessonName": "Coğrafya"
+    },
+    {
+      "questionId": "14",
+      "questionText": "1000 sayısının yarısının yarısı kaçtır?",
+      "optionA": "200",
+      "optionB": "250",
+      "optionC": "300",
+      "optionD": "500",
+      "correctAnswer": "B",
+      "topicId": "matematik_temel",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "15",
+      "questionText": "Atatürk'ün doğum yeri neresidir?",
+      "optionA": "İstanbul",
+      "optionB": "Ankara",
+      "optionC": "Selanik",
+      "optionD": "İzmir",
+      "correctAnswer": "C",
+      "topicId": "tarih_cumhuriyet",
+      "lessonName": "Tarih"
+    },
+    {
+      "questionId": "16",
+      "questionText": "Hangisi bir yenilenebilir enerji kaynağıdır?",
+      "optionA": "Kömür",
+      "optionB": "Doğalgaz",
+      "optionC": "Petrol",
+      "optionD": "Güneş enerjisi",
+      "correctAnswer": "D",
+      "topicId": "fen_enerji",
+      "lessonName": "Fen Bilgisi"
+    },
+    {
+      "questionId": "17",
+      "questionText": "Karadeniz'e kıyısı olan ülke sayısı kaçtır?",
+      "optionA": "4",
+      "optionB": "5",
+      "optionC": "6",
+      "optionD": "7",
+      "correctAnswer": "C",
+      "topicId": "cografya_dunya",
+      "lessonName": "Coğrafya"
+    },
+    {
+      "questionId": "18",
+      "questionText": "Bir düzinede kaç adet vardır?",
+      "optionA": "6",
+      "optionB": "10",
+      "optionC": "12",
+      "optionD": "24",
+      "correctAnswer": "C",
+      "topicId": "matematik_temel",
+      "lessonName": "Matematik"
+    },
+    {
+      "questionId": "19",
+      "questionText": "İnsan vücudunda kaç kemik bulunur?",
+      "optionA": "106",
+      "optionB": "156",
+      "optionC": "206",
+      "optionD": "256",
+      "correctAnswer": "C",
+      "topicId": "fen_insan",
+      "lessonName": "Fen Bilgisi"
+    },
+    {
+      "questionId": "20",
+      "questionText": "Türkiye'nin en büyük gölü hangisidir?",
+      "optionA": "Tuz Gölü",
+      "optionB": "Van Gölü",
+      "optionC": "Beyşehir Gölü",
+      "optionD": "Eğirdir Gölü",
+      "correctAnswer": "B",
+      "topicId": "cografya_turkiye",
+      "lessonName": "Coğrafya"
+    }
+  ]
+}
