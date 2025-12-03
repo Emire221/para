@@ -35,9 +35,6 @@ class FakeDatabaseHelper extends Fake implements IDatabaseHelper {
   Future<void> insertKonu(Map<String, dynamic> row) async {}
 
   @override
-  Future<void> insertVideo(Map<String, dynamic> row) async {}
-
-  @override
   Future<void> clearAllData() async {}
 
   @override

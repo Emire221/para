@@ -205,6 +205,9 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
       if (_currentIndex >= _allCards.length && !_resultsSaved) {
         await _saveResults();
 
+        // mounted kontrolü - async işlem sonrası context güvenli kullanım
+        if (!mounted) return;
+
         // ResultScreen'e yönlendir
         Navigator.pushReplacement(
           context,
