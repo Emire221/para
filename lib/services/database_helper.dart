@@ -34,7 +34,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -192,6 +192,29 @@ class DatabaseHelper implements IDatabaseHelper {
         details TEXT
       )
     ''');
+
+    // Haftalık Sınav Sonuçları Tablosu
+    await db.execute('''
+      CREATE TABLE WeeklyExamResults(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        examId TEXT NOT NULL,
+        odaId TEXT NOT NULL,
+        odaIsmi TEXT,
+        odaBaslangic TEXT,
+        odaBitis TEXT,
+        sonucTarihi TEXT,
+        odaDurumu TEXT,
+        odaKatilimciId TEXT NOT NULL,
+        cevaplar TEXT,
+        dogru INTEGER,
+        yanlis INTEGER,
+        bos INTEGER,
+        puan INTEGER,
+        siralama INTEGER,
+        toplamKatilimci INTEGER,
+        completedAt TEXT
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -307,6 +330,31 @@ class DatabaseHelper implements IDatabaseHelper {
           totalQuestions INTEGER,
           completedAt TEXT,
           details TEXT
+        )
+      ''');
+    }
+
+    if (oldVersion < 7) {
+      // Haftalık Sınav Sonuçları Tablosu
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS WeeklyExamResults(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          examId TEXT NOT NULL,
+          odaId TEXT NOT NULL,
+          odaIsmi TEXT,
+          odaBaslangic TEXT,
+          odaBitis TEXT,
+          sonucTarihi TEXT,
+          odaDurumu TEXT,
+          odaKatilimciId TEXT NOT NULL,
+          cevaplar TEXT,
+          dogru INTEGER,
+          yanlis INTEGER,
+          bos INTEGER,
+          puan INTEGER,
+          siralama INTEGER,
+          toplamKatilimci INTEGER,
+          completedAt TEXT
         )
       ''');
     }

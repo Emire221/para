@@ -3,6 +3,7 @@ import 'dart:ui';
 import '../lesson_selection_screen.dart';
 import '../../util/app_colors.dart';
 import '../achievements_screen.dart';
+import '../../features/exam/presentation/widgets/weekly_exam_card.dart';
 
 /// Dersler ve konular tab'ı - Eğitim modüllerini listeler
 class LessonsTab extends StatelessWidget {
@@ -38,6 +39,9 @@ class LessonsTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              // Haftalık Sınav Kartı
+              const WeeklyExamCard(),
+              const SizedBox(height: 20),
               _buildLearningCard(
                 context,
                 isDarkMode,
