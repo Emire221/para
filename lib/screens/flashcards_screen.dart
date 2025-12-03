@@ -391,44 +391,44 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                       width: cardWidth,
                       height: cardHeight,
                       child: GlassContainer(
-                    color: Colors.white,
-                    opacity: 0.95,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.quiz,
-                              size: 50,
-                              color: Color(0xFF833ab4),
+                        color: Colors.white,
+                        opacity: 0.95,
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.quiz,
+                                  size: 50,
+                                  color: Color(0xFF833ab4),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  _allCards[_currentIndex].onyuz,
+                                  style: const TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                    height: 1.4,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 40),
+                                Text(
+                                  'Kart ${_currentIndex + 1}/${_allCards.length}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              _allCards[_currentIndex].onyuz,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                height: 1.4,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 40),
-                            Text(
-                              'Kart ${_currentIndex + 1}/${_allCards.length}',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
                     );
                   },
                 ),
