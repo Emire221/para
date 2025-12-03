@@ -45,6 +45,44 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
     }
   }
 
+  /// Okul adı ve sınıf bilgisini birleştiren yardımcı metod
+  String _buildSubtitle() {
+    final schoolName = _userData?['schoolName'] as String?;
+    // Firebase'de 'grade' veya 'classLevel' olarak kaydedilmiş olabilir
+    final grade = (_userData?['grade'] ?? _userData?['classLevel']) as String?;
+
+    final parts = <String>[];
+    if (schoolName != null && schoolName.isNotEmpty) {
+      parts.add(schoolName);
+    }
+    if (grade != null && grade.isNotEmpty) {
+      // "3_Sinif" formatını "3. Sınıf" formatına çevir
+      parts.add(_formatGrade(grade));
+    }
+
+    if (parts.isEmpty) {
+      return 'Profil bilgisi bulunamadı';
+    }
+
+    return parts.join(' - ');
+  }
+
+  /// Sınıf formatını düzenler (örn: "3_Sinif" -> "3. Sınıf")
+  String _formatGrade(String grade) {
+    // Zaten doğru formattaysa direkt döndür
+    if (grade.contains('. Sınıf')) {
+      return grade;
+    }
+
+    // "3_Sinif" formatını "3. Sınıf" formatına çevir
+    final match = RegExp(r'(\d+)_?[Ss]inif').firstMatch(grade);
+    if (match != null) {
+      return '${match.group(1)}. Sınıf';
+    }
+
+    return grade;
+  }
+
   Future<void> _signOut() async {
     await FirebaseAuth.instance.signOut();
     if (mounted) {
@@ -229,7 +267,7 @@ class _ProfileSettingsScreenState extends ConsumerState<ProfileSettingsScreen> {
                   const SizedBox(height: 8),
                   Center(
                     child: Text(
-                      '${_userData?['schoolName'] ?? ''} - ${_userData?['grade'] ?? ''}',
+                      _buildSubtitle(),
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 16,
