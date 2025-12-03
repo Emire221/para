@@ -47,7 +47,9 @@ class _TestScreenState extends ConsumerState<TestScreen> {
     // Test tamamlandığında result ekranına git
     ref.listen<bool>(isTestCompletedProvider, (previous, isCompleted) {
       if (isCompleted && mounted) {
-        _navigateToResult(testState);
+        // ÖNEMLİ: Güncel state'i tekrar oku, build'deki testState eski olabilir!
+        final currentState = ref.read(testControllerProvider);
+        _navigateToResult(currentState);
       }
     });
 
@@ -61,54 +63,57 @@ class _TestScreenState extends ConsumerState<TestScreen> {
       return const Scaffold(body: Center(child: Text('Soru bulunamadı')));
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF000428), Color(0xFF004e92)],
+    return PopScope(
+      canPop: false, // Android geri tuşunu devre dışı bırak
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF000428), Color(0xFF004e92)],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Top Bar
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Timer
-                    TestTimerDisplay(timeLeft: testState.timeLeft),
-                    // Progress
-                    QuestionProgress(
-                      currentIndex: testState.currentQuestionIndex,
-                      totalQuestions: testState.questions.length,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Question Area
-              Expanded(
-                child: Padding(
+          child: SafeArea(
+            child: Column(
+              children: [
+                // Top Bar
+                Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Soru Kartı
-                      QuestionCard(questionText: currentQuestion.soruMetni),
-
-                      const SizedBox(height: 32),
-
-                      // Cevap Seçenekleri
-                      ..._buildAnswerOptions(currentQuestion, controller),
+                      // Timer
+                      TestTimerDisplay(timeLeft: testState.timeLeft),
+                      // Progress
+                      QuestionProgress(
+                        currentIndex: testState.currentQuestionIndex,
+                        totalQuestions: testState.questions.length,
+                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
+
+                // Question Area
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Soru Kartı
+                        QuestionCard(questionText: currentQuestion.soruMetni),
+
+                        const SizedBox(height: 32),
+
+                        // Cevap Seçenekleri
+                        ..._buildAnswerOptions(currentQuestion, controller),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

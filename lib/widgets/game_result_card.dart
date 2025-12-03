@@ -77,8 +77,10 @@ class GameResultCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -86,7 +88,9 @@ class GameResultCard extends StatelessWidget {
                       Text(
                         formattedDate,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white.withValues(alpha: 0.6)
+                              : Colors.grey[600],
                           fontSize: 12,
                         ),
                       ),
@@ -153,13 +157,7 @@ class GameResultCard extends StatelessWidget {
               fontSize: 18,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 12,
-            ),
-          ),
+          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
         ],
       ),
     );

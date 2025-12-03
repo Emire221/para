@@ -72,7 +72,9 @@ class GamesTab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 140,
+        constraints: const BoxConstraints(
+          minHeight: 140, // Minimum yükseklik
+        ),
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(20),
@@ -99,7 +101,7 @@ class GamesTab extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Flexible size
                 children: [
                   Icon(icon, color: Colors.white, size: 40),
                   const SizedBox(height: 12),
