@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../domain/models/manifest_model.dart';
@@ -56,7 +56,7 @@ class SyncController extends StateNotifier<SyncState> {
         message: 'Senkronizasyon tamamlandı!',
       );
     } catch (e) {
-      debugPrint('Sync hatası: $e');
+      if (kDebugMode) debugPrint('Sync hatası: $e');
       state = state.copyWith(
         isSyncing: false,
         error: 'Senkronizasyon hatası: $e',
@@ -106,7 +106,7 @@ class SyncController extends StateNotifier<SyncState> {
           downloadedFiles: [...state.downloadedFiles, file.path],
         );
       } catch (e) {
-        debugPrint('Dosya indirme hatası (${file.path}): $e');
+        if (kDebugMode) debugPrint('Dosya indirme hatası (${file.path}): $e');
         state = state.copyWith(failedFiles: [...state.failedFiles, file.path]);
       }
     }
@@ -127,7 +127,7 @@ class SyncController extends StateNotifier<SyncState> {
           downloadedFiles: [...state.downloadedFiles, file.path],
         );
       } catch (e) {
-        debugPrint('Dosya indirme hatası (${file.path}): $e');
+        if (kDebugMode) debugPrint('Dosya indirme hatası (${file.path}): $e');
         state = state.copyWith(failedFiles: [...state.failedFiles, file.path]);
       }
     }
@@ -190,7 +190,7 @@ class SyncController extends StateNotifier<SyncState> {
           downloadedFiles: [...state.downloadedFiles, file.path],
         );
       } catch (e) {
-        debugPrint('Dosya indirme hatası (${file.path}): $e');
+        if (kDebugMode) debugPrint('Dosya indirme hatası (${file.path}): $e');
         state = state.copyWith(failedFiles: [...state.failedFiles, file.path]);
       }
     }
@@ -211,7 +211,7 @@ class SyncController extends StateNotifier<SyncState> {
           downloadedFiles: [...state.downloadedFiles, file.path],
         );
       } catch (e) {
-        debugPrint('Dosya indirme hatası (${file.path}): $e');
+        if (kDebugMode) debugPrint('Dosya indirme hatası (${file.path}): $e');
         state = state.copyWith(failedFiles: [...state.failedFiles, file.path]);
       }
     }
@@ -241,7 +241,7 @@ class SyncController extends StateNotifier<SyncState> {
           state = state.copyWith(message: message);
         });
       } catch (e) {
-        debugPrint('Arşiv içerik işleme hatası: $e');
+        if (kDebugMode) debugPrint('Arşiv içerik işleme hatası: $e');
         // Kritik hata değilse devam et, ama logla
       }
     } else {
@@ -265,3 +265,4 @@ class SyncController extends StateNotifier<SyncState> {
     state = const SyncState();
   }
 }
+

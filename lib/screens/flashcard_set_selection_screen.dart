@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/repository_providers.dart';
@@ -52,7 +53,7 @@ class _FlashcardSetSelectionScreenState
         });
       }
     } catch (e) {
-      debugPrint('Bilgi kartları yükleme hatası: $e');
+      if (kDebugMode) debugPrint('Bilgi kartları yükleme hatası: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -166,3 +167,4 @@ class _FlashcardSetSelectionScreenState
     );
   }
 }
+

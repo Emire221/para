@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,7 +56,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         }).toList();
       });
     } catch (e) {
-      debugPrint('Sınıf listesi yüklenemedi: $e');
+      if (kDebugMode) debugPrint('Sınıf listesi yüklenemedi: $e');
     }
   }
 
@@ -388,3 +389,4 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     );
   }
 }
+

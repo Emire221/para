@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -109,10 +109,10 @@ class WeeklyExamService {
         return WeeklyExam.fromJson(jsonData);
       }
 
-      debugPrint('haftalik_sinav.json bulunamadı');
+      if (kDebugMode) debugPrint('haftalik_sinav.json bulunamadı');
       return null;
     } catch (e) {
-      debugPrint('Haftalık sınav yükleme hatası: $e');
+      if (kDebugMode) debugPrint('Haftalık sınav yükleme hatası: $e');
       return null;
     }
   }
@@ -300,8 +300,9 @@ class WeeklyExamService {
           examWeekStart.month == thisWeekMonday.month &&
           examWeekStart.day == thisWeekMonday.day;
     } catch (e) {
-      debugPrint('Tarih parse hatası: $e');
+      if (kDebugMode) debugPrint('Tarih parse hatası: $e');
       return false;
     }
   }
 }
+

@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../domain/entities/guess_level.dart';
@@ -55,7 +56,7 @@ class _GuessLevelSelectionScreenState extends State<GuessLevelSelectionScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Seviye yükleme hatası: $e');
+      if (kDebugMode) debugPrint('Seviye yükleme hatası: $e');
       setState(() {
         _errorMessage =
             'Seviyeler yüklenemedi.\n'
@@ -373,3 +374,4 @@ class _GuessLevelSelectionScreenState extends State<GuessLevelSelectionScreen> {
     }
   }
 }
+

@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
 import '../widgets/glass_container.dart';
@@ -30,7 +31,7 @@ class _LessonSelectionScreenState extends State<LessonSelectionScreen> {
         _lessons = maps;
       });
     } catch (e) {
-      debugPrint('Dersler yüklenirken hata: $e');
+      if (kDebugMode) debugPrint('Dersler yüklenirken hata: $e');
     }
   }
 
@@ -168,3 +169,4 @@ class _LessonSelectionScreenState extends State<LessonSelectionScreen> {
     );
   }
 }
+

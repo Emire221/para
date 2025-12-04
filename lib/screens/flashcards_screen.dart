@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,7 +67,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
       final yanlisData = json.decode(yanlisJson);
       _yanlisMesajlari = List<String>.from(yanlisData['mesajlar']);
     } catch (e) {
-      debugPrint('Motivasyon mesajları yükleme hatası: $e');
+      if (kDebugMode) debugPrint('Motivasyon mesajları yükleme hatası: $e');
       // Fallback mesajlar
       _dogruMesajlari = ['Harikasın! 🎉', 'Süper! ⭐', 'Mükemmel! 🏆'];
       _yanlisMesajlari = ['Bir Dahakine! 💫', 'Pes Etme! 🚀', 'Devam Et! 💪'];
@@ -109,7 +110,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
           });
         }
       } catch (e) {
-        debugPrint('Kart yükleme hatası: $e');
+        if (kDebugMode) debugPrint('Kart yükleme hatası: $e');
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -185,7 +186,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
       // Eğer son kartsa ResultScreen'e yönlendir
       if (isLastCard && !_resultsSaved) {
         _resultsSaved = true; // Tekrar yönlendirmeyi engelle
-        debugPrint('Son kart tamamlandı, ResultScreen\'e yönlendiriliyor...');
+        if (kDebugMode) debugPrint('Son kart tamamlandı, ResultScreen\'e yönlendiriliyor...');
         debugPrint(
           'Skor: ${_correctCount * 10}, Doğru: $_correctCount, Yanlış: $_wrongCount',
         );
@@ -484,3 +485,4 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
     );
   }
 }
+

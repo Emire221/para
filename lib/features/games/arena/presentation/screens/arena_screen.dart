@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/bot.dart';
@@ -316,9 +317,9 @@ class _ArenaScreenState extends ConsumerState<ArenaScreen> {
 
       // Maskota XP ekle
       await _addXpToMascot();
-      debugPrint('Arena oyunu kaydedildi - Kazanıldı: $playerWon');
+      if (kDebugMode) debugPrint('Arena oyunu kaydedildi - Kazanıldı: $playerWon');
     } catch (e) {
-      debugPrint('Arena sonuç kaydetme hatası: $e');
+      if (kDebugMode) debugPrint('Arena sonuç kaydetme hatası: $e');
     }
   }
 
@@ -328,9 +329,9 @@ class _ArenaScreenState extends ConsumerState<ArenaScreen> {
       final mascotRepository = ref.read(mascotRepositoryProvider);
       await mascotRepository.addXp(1);
       ref.invalidate(activeMascotProvider);
-      debugPrint('Arena oyunu - Maskota 1 XP eklendi');
+      if (kDebugMode) debugPrint('Arena oyunu - Maskota 1 XP eklendi');
     } catch (e) {
-      debugPrint('Maskot XP ekleme hatası: $e');
+      if (kDebugMode) debugPrint('Maskot XP ekleme hatası: $e');
     }
   }
 
@@ -586,3 +587,4 @@ class _ArenaScreenState extends ConsumerState<ArenaScreen> {
     );
   }
 }
+

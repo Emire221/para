@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -16,22 +16,22 @@ class FirebaseStorageService {
     : _storage = storage ?? FirebaseStorage.instance,
       _dbHelper = dbHelper ?? DatabaseHelper();
 
-  // Türkçe karakterleri düzgün şekilde normalize et
+  // TÃ¼rkÃ§e karakterleri dÃ¼zgÃ¼n ÅŸekilde normalize et
   String _normalizeCityName(String cityName) {
     return cityName
         .toLowerCase()
-        .replaceAll('ı', 'i')
-        .replaceAll('ğ', 'g')
-        .replaceAll('ü', 'u')
-        .replaceAll('ş', 's')
-        .replaceAll('ö', 'o')
-        .replaceAll('ç', 'c')
-        .replaceAll('İ', 'i')
-        .replaceAll('Ğ', 'g')
-        .replaceAll('Ü', 'u')
-        .replaceAll('Ş', 's')
-        .replaceAll('Ö', 'o')
-        .replaceAll('Ç', 'c');
+        .replaceAll('Ä±', 'i')
+        .replaceAll('ÄŸ', 'g')
+        .replaceAll('Ã¼', 'u')
+        .replaceAll('ÅŸ', 's')
+        .replaceAll('Ã¶', 'o')
+        .replaceAll('Ã§', 'c')
+        .replaceAll('Ä°', 'i')
+        .replaceAll('Ä', 'g')
+        .replaceAll('Ãœ', 'u')
+        .replaceAll('Å', 's')
+        .replaceAll('Ã–', 'o')
+        .replaceAll('Ã‡', 'c');
   }
 
   // Okul verilerini indir (okullar/[IL].json)
@@ -46,18 +46,18 @@ class FirebaseStorageService {
       final List<dynamic> jsonList = json.decode(jsonString);
       return jsonList.map((e) => School.fromJson(e)).toList();
     } catch (e) {
-      debugPrint('Okul verisi indirme hatası: $e');
+      if (kDebugMode) debugPrint('Okul verisi indirme hatasÄ±: $e');
       return [];
     }
   }
 
-  // Sınıf içeriğini indir ve veritabanına kaydet
+  // SÄ±nÄ±f iÃ§eriÄŸini indir ve veritabanÄ±na kaydet
   Future<void> downloadClassContent(
     String className,
     Function(String) onProgress,
   ) async {
     try {
-      // 1. Temel dosyaları indir
+      // 1. Temel dosyalarÄ± indir
       onProgress('Ders listesi indiriliyor...');
       final dersListesiStr = await _downloadJsonString(
         className,
@@ -69,14 +69,14 @@ class FirebaseStorageService {
       );
 
       if (dersListesiStr == null || konuListesiStr == null) {
-        throw Exception('Temel dosyalar bulunamadı');
+        throw Exception('Temel dosyalar bulunamadÄ±');
       }
 
-      // 2. Veritabanını temizle
+      // 2. VeritabanÄ±nÄ± temizle
       await _dbHelper.clearAllData();
 
-      // 3. JSON'ları arka planda parse et ve hazırla
-      onProgress('Veriler işleniyor...');
+      // 3. JSON'larÄ± arka planda parse et ve hazÄ±rla
+      onProgress('Veriler iÅŸleniyor...');
 
       // Dersler
       final derslerData = await compute(_parseDersler, dersListesiStr);
@@ -86,11 +86,11 @@ class FirebaseStorageService {
       final konularData = await compute(_parseKonular, konuListesiStr);
       await _dbHelper.batchInsert('Konular', konularData);
 
-      // 4. Ders klasörlerini tara ve içerikleri indir
+      // 4. Ders klasÃ¶rlerini tara ve iÃ§erikleri indir
       final dersler = derslerData.map((d) => Lesson.fromJson(d)).toList();
 
       for (var ders in dersler) {
-        onProgress('${ders.dersAdi} içeriği indiriliyor...');
+        onProgress('${ders.dersAdi} iÃ§eriÄŸi indiriliyor...');
         String folderName = _getFolderNameForLesson(ders.dersAdi);
 
         // Testleri indir ve kaydet
@@ -100,7 +100,7 @@ class FirebaseStorageService {
           _parseTest,
         );
 
-        // Bilgi kartlarını indir ve kaydet
+        // Bilgi kartlarÄ±nÄ± indir ve kaydet
         await _processFolderContent(
           '$className/$folderName/bilgi',
           'BilgiKartlari',
@@ -108,16 +108,16 @@ class FirebaseStorageService {
         );
       }
 
-      onProgress('Tamamlandı');
+      onProgress('TamamlandÄ±');
     } catch (e) {
-      debugPrint('İçerik indirme hatası: $e');
+      if (kDebugMode) debugPrint('Ä°Ã§erik indirme hatasÄ±: $e');
       rethrow;
     }
   }
 
   Future<String?> _downloadJsonString(String className, String fileName) async {
     try {
-      // 1. Güvenli dosya ismi oluştur (Örn: "3. Sınıf" -> "3_Sinif")
+      // 1. GÃ¼venli dosya ismi oluÅŸtur (Ã–rn: "3. SÄ±nÄ±f" -> "3_Sinif")
       final safeClassName = className.replaceAll('.', '').replaceAll(' ', '_');
       final localFileName = '${safeClassName}_$fileName';
 
@@ -125,15 +125,15 @@ class FirebaseStorageService {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/$localFileName');
 
-      // 3. Dosya var mı kontrol et
+      // 3. Dosya var mÄ± kontrol et
       if (await file.exists()) {
-        debugPrint('Yerel hafızadan okunuyor: $localFileName');
+        if (kDebugMode) debugPrint('Yerel hafÄ±zadan okunuyor: $localFileName');
         return await file.readAsString();
       }
 
       // 4. Yoksa Firebase'den indir
       final fullPath = '$className/$fileName';
-      debugPrint('Firebase\'den indiriliyor: $fullPath');
+      if (kDebugMode) debugPrint('Firebase\'den indiriliyor: $fullPath');
       final ref = _storage.ref().child(fullPath);
       final data = await ref.getData();
 
@@ -141,13 +141,13 @@ class FirebaseStorageService {
 
       final jsonString = utf8.decode(data);
 
-      // 5. Yerel hafızaya kaydet
+      // 5. Yerel hafÄ±zaya kaydet
       await file.writeAsString(jsonString);
-      debugPrint('Yerel hafızaya kaydedildi: $localFileName');
+      if (kDebugMode) debugPrint('Yerel hafÄ±zaya kaydedildi: $localFileName');
 
       return jsonString;
     } catch (e) {
-      debugPrint('$fileName indirme hatası: $e');
+      if (kDebugMode) debugPrint('$fileName indirme hatasÄ±: $e');
       return null;
     }
   }
@@ -183,62 +183,62 @@ class FirebaseStorageService {
         await _dbHelper.batchInsert(tableName, dataList);
       }
     } catch (e) {
-      debugPrint('$path içeriği indirme hatası: $e');
+      if (kDebugMode) debugPrint('$path iÃ§eriÄŸi indirme hatasÄ±: $e');
     }
   }
 
   String _getFolderNameForLesson(String lessonName) {
     if (lessonName.contains('Fen')) return 'Fen';
     if (lessonName.contains('Matematik')) return 'Matematik';
-    if (lessonName.contains('Türkçe')) return 'Türkce';
-    if (lessonName.contains('İnkılap')) {
-      return 'T.C. İnkılap Tarihi ve Atatürkçülük';
+    if (lessonName.contains('TÃ¼rkÃ§e')) return 'TÃ¼rkce';
+    if (lessonName.contains('Ä°nkÄ±lap')) {
+      return 'T.C. Ä°nkÄ±lap Tarihi ve AtatÃ¼rkÃ§Ã¼lÃ¼k';
     }
-    if (lessonName.contains('İngilizce')) return 'İngilizce';
+    if (lessonName.contains('Ä°ngilizce')) return 'Ä°ngilizce';
     if (lessonName.contains('Sosyal')) return 'Sosyal';
     if (lessonName.contains('Din')) return 'Din';
     return lessonName.split(' ')[0];
   }
 
-  // ========== YENİ SYNC 2.0 METODLARI ==========
+  // ========== YENÄ° SYNC 2.0 METODLARI ==========
 
-  /// Manifest dosyasını indir ve parse et
+  /// Manifest dosyasÄ±nÄ± indir ve parse et
   Future<Manifest> downloadManifest(String className) async {
     try {
       final ref = _storage.ref().child('$className/manifest.json');
       final data = await ref.getData();
       if (data == null) {
-        throw Exception('Manifest dosyası bulunamadı');
+        throw Exception('Manifest dosyasÄ± bulunamadÄ±');
       }
 
       final jsonString = utf8.decode(data);
       final jsonMap = json.decode(jsonString);
       return Manifest.fromJson(jsonMap as Map<String, dynamic>);
     } catch (e) {
-      debugPrint('Manifest indirme hatası: $e');
+      if (kDebugMode) debugPrint('Manifest indirme hatasÄ±: $e');
       rethrow;
     }
   }
 
-  /// tar.bz2 arşiv dosyasını indir ve aç
+  /// tar.bz2 arÅŸiv dosyasÄ±nÄ± indir ve aÃ§
   Future<void> downloadAndExtractArchive(
     String archivePath,
     Function(String) onProgress,
   ) async {
     try {
-      onProgress('Arşiv indiriliyor: $archivePath');
+      onProgress('ArÅŸiv indiriliyor: $archivePath');
 
-      // tar.bz2 dosyasını indir
+      // tar.bz2 dosyasÄ±nÄ± indir
       final ref = _storage.ref().child(archivePath);
       final data = await ref.getData();
       if (data == null) {
-        throw Exception('Arşiv dosyası bulunamadı: $archivePath');
+        throw Exception('ArÅŸiv dosyasÄ± bulunamadÄ±: $archivePath');
       }
 
-      onProgress('Arşiv açılıyor...');
+      onProgress('ArÅŸiv aÃ§Ä±lÄ±yor...');
 
-      // BZip2 ile sıkıştırılmış tar arşivini aç
-      // Önce BZip2 decode et, sonra tar decode et
+      // BZip2 ile sÄ±kÄ±ÅŸtÄ±rÄ±lmÄ±ÅŸ tar arÅŸivini aÃ§
+      // Ã–nce BZip2 decode et, sonra tar decode et
       final decompressed = BZip2Decoder().decodeBytes(data);
       final archive = TarDecoder().decodeBytes(decompressed);
 
@@ -254,15 +254,15 @@ class FirebaseStorageService {
           await Directory(outPath).create(recursive: true);
         }
       }
-      debugPrint('Arşiv açma işlemi: $archivePath (${data.length} bytes)');
-      onProgress('Arşiv işlendi: $archivePath');
+      if (kDebugMode) debugPrint('ArÅŸiv aÃ§ma iÅŸlemi: $archivePath (${data.length} bytes)');
+      onProgress('ArÅŸiv iÅŸlendi: $archivePath');
     } catch (e) {
-      debugPrint('Arşiv indirme/açma hatası ($archivePath): $e');
+      if (kDebugMode) debugPrint('ArÅŸiv indirme/aÃ§ma hatasÄ± ($archivePath): $e');
       rethrow;
     }
   }
 
-  /// Arşivden çıkan dosyaları tara ve veritabanına kaydet
+  /// ArÅŸivden Ã§Ä±kan dosyalarÄ± tara ve veritabanÄ±na kaydet
   Future<void> processLocalArchiveContent(
     String rootPath,
     Function(String) onProgress,
@@ -270,13 +270,13 @@ class FirebaseStorageService {
     try {
       final dir = Directory(rootPath);
       if (!await dir.exists()) {
-        throw Exception('Klasör bulunamadı: $rootPath');
+        throw Exception('KlasÃ¶r bulunamadÄ±: $rootPath');
       }
 
       // 1. Ders Listesi
       final dersListesiFile = File('${dir.path}/derslistesi.json');
       if (await dersListesiFile.exists()) {
-        onProgress('Ders listesi işleniyor...');
+        onProgress('Ders listesi iÅŸleniyor...');
         final jsonString = await dersListesiFile.readAsString();
         final derslerData = await compute(_parseDersler, jsonString);
         await _dbHelper.batchInsert('Dersler', derslerData);
@@ -285,17 +285,17 @@ class FirebaseStorageService {
       // 2. Konu Listesi
       final konuListesiFile = File('${dir.path}/konulistesi.json');
       if (await konuListesiFile.exists()) {
-        onProgress('Konu listesi işleniyor...');
+        onProgress('Konu listesi iÅŸleniyor...');
         final jsonString = await konuListesiFile.readAsString();
         final konularData = await compute(_parseKonular, jsonString);
         await _dbHelper.batchInsert('Konular', konularData);
       }
 
-      // 4. Kök dizindeki tüm JSON dosyalarını tara (testler ve bilgi kartları)
-      onProgress('Test ve bilgi kartları taranıyor...');
+      // 4. KÃ¶k dizindeki tÃ¼m JSON dosyalarÄ±nÄ± tara (testler ve bilgi kartlarÄ±)
+      onProgress('Test ve bilgi kartlarÄ± taranÄ±yor...');
       final allFiles = dir.listSync();
 
-      // Temel dosyaları filtrele
+      // Temel dosyalarÄ± filtrele
       final excludedFiles = {
         'derslistesi.json',
         'konulistesi.json',
@@ -315,7 +315,7 @@ class FirebaseStorageService {
         if (item is File && item.path.endsWith('.json')) {
           final fileName = item.path.split(Platform.pathSeparator).last;
 
-          // Temel dosyaları atla
+          // Temel dosyalarÄ± atla
           if (excludedFiles.contains(fileName)) {
             continue;
           }
@@ -324,69 +324,69 @@ class FirebaseStorageService {
             final jsonString = await item.readAsString();
             final jsonData = json.decode(jsonString);
 
-            // Test dosyası mı kontrol et (testID alanı var mı?)
+            // Test dosyasÄ± mÄ± kontrol et (testID alanÄ± var mÄ±?)
             if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('testID')) {
               final testData = _parseTest(jsonString);
               await _dbHelper.insertTest(testData);
               processedTests++;
-              debugPrint('Test işlendi: $fileName');
+              if (kDebugMode) debugPrint('Test iÅŸlendi: $fileName');
             }
-            // Bilgi kartı dosyası mı kontrol et (kartSetID alanı var mı?)
+            // Bilgi kartÄ± dosyasÄ± mÄ± kontrol et (kartSetID alanÄ± var mÄ±?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('kartSetID')) {
               final bilgiKartData = _parseBilgiKart(jsonString);
               await _dbHelper.insertFlashcardSet(bilgiKartData);
               processedFlashcards++;
-              debugPrint('Bilgi kartı işlendi: $fileName');
+              if (kDebugMode) debugPrint('Bilgi kartÄ± iÅŸlendi: $fileName');
             }
-            // Fill Blanks Level dosyası mı kontrol et (levelID alanı var mı?)
+            // Fill Blanks Level dosyasÄ± mÄ± kontrol et (levelID alanÄ± var mÄ±?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('levelID')) {
-              // questions field'ını JSON string olarak kaydet
+              // questions field'Ä±nÄ± JSON string olarak kaydet
               final levelData = Map<String, dynamic>.from(jsonData);
               if (levelData.containsKey('questions')) {
                 levelData['questions'] = json.encode(levelData['questions']);
               }
               await _dbHelper.insertFillBlanksLevel(levelData);
               processedLevels++;
-              debugPrint('Fill Blanks Level işlendi: $fileName');
+              if (kDebugMode) debugPrint('Fill Blanks Level iÅŸlendi: $fileName');
             }
-            // Arena Set dosyası mı kontrol et (arenaSetID alanı var mı?)
+            // Arena Set dosyasÄ± mÄ± kontrol et (arenaSetID alanÄ± var mÄ±?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('arenaSetID')) {
-              // questions field'ını JSON string olarak kaydet
+              // questions field'Ä±nÄ± JSON string olarak kaydet
               final arenaData = Map<String, dynamic>.from(jsonData);
               if (arenaData.containsKey('questions')) {
                 arenaData['questions'] = json.encode(arenaData['questions']);
               }
               await _dbHelper.insertArenaSet(arenaData);
               processedArenaSets++;
-              debugPrint('Arena Set işlendi: $fileName');
+              if (kDebugMode) debugPrint('Arena Set iÅŸlendi: $fileName');
             }
-            // Haftalık Sınav dosyası mı kontrol et (weeklyExamId alanı var mı?)
+            // HaftalÄ±k SÄ±nav dosyasÄ± mÄ± kontrol et (weeklyExamId alanÄ± var mÄ±?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('weeklyExamId')) {
-              // questions field'ını JSON string olarak kaydet
+              // questions field'Ä±nÄ± JSON string olarak kaydet
               final examData = Map<String, dynamic>.from(jsonData);
               if (examData.containsKey('questions')) {
                 examData['questions'] = json.encode(examData['questions']);
               }
 
-              // Önce eski sınav verilerini sil, sonra yenisini ekle
+              // Ã–nce eski sÄ±nav verilerini sil, sonra yenisini ekle
               final newExamId = examData['weeklyExamId'] as String;
               await _dbHelper.clearOldWeeklyExamData(newExamId);
               await _dbHelper.insertWeeklyExam(examData);
               processedWeeklyExams++;
               debugPrint(
-                'Haftalık Sınav işlendi (eski veriler silindi): $fileName',
+                'HaftalÄ±k SÄ±nav iÅŸlendi (eski veriler silindi): $fileName',
               );
             }
-            // Salla Bakalım (Guess) dosyası mı kontrol et (guessID veya sallaID alanı var mı?)
+            // Salla BakalÄ±m (Guess) dosyasÄ± mÄ± kontrol et (guessID veya sallaID alanÄ± var mÄ±?)
             else if (jsonData is Map<String, dynamic> &&
                 (jsonData.containsKey('guessID') ||
                     jsonData.containsKey('sallaID'))) {
-              // Sadece DB'de olan kolonları içeren yeni map oluştur
+              // Sadece DB'de olan kolonlarÄ± iÃ§eren yeni map oluÅŸtur
               final guessData = <String, dynamic>{
                 'levelID': jsonData['guessID'] ?? jsonData['sallaID'],
                 'title': jsonData['title'],
@@ -398,37 +398,37 @@ class FirebaseStorageService {
               };
               await _dbHelper.insertGuessLevel(guessData);
               processedGuessLevels++;
-              debugPrint('Salla Bakalım Level işlendi: $fileName');
+              if (kDebugMode) debugPrint('Salla BakalÄ±m Level iÅŸlendi: $fileName');
             }
-            // Ne test ne bilgi kartı ne de oyun dosyası değilse
+            // Ne test ne bilgi kartÄ± ne de oyun dosyasÄ± deÄŸilse
             else {
               skippedFiles++;
-              debugPrint('Bilinmeyen dosya formatı atlandı: $fileName');
+              if (kDebugMode) debugPrint('Bilinmeyen dosya formatÄ± atlandÄ±: $fileName');
             }
           } catch (e) {
             skippedFiles++;
-            debugPrint('Dosya işleme hatası ($fileName): $e');
+            if (kDebugMode) debugPrint('Dosya iÅŸleme hatasÄ± ($fileName): $e');
           }
         }
       }
 
       debugPrint(
-        'İşlem özeti: $processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, '
-        '$processedGuessLevels salla bakalım, $skippedFiles atlanan dosya',
+        'Ä°ÅŸlem Ã¶zeti: $processedTests test, $processedFlashcards bilgi kartÄ±, '
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalÄ±k sÄ±nav, '
+        '$processedGuessLevels salla bakalÄ±m, $skippedFiles atlanan dosya',
       );
       onProgress(
-        'İçerik veritabanına kaydedildi ($processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, '
-        '$processedGuessLevels salla bakalım)',
+        'Ä°Ã§erik veritabanÄ±na kaydedildi ($processedTests test, $processedFlashcards bilgi kartÄ±, '
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalÄ±k sÄ±nav, '
+        '$processedGuessLevels salla bakalÄ±m)',
       );
     } catch (e) {
-      debugPrint('Yerel içerik işleme hatası: $e');
+      if (kDebugMode) debugPrint('Yerel iÃ§erik iÅŸleme hatasÄ±: $e');
       rethrow;
     }
   }
 
-  /// JSON dosyasını indir ve DB'ye kaydet
+  /// JSON dosyasÄ±nÄ± indir ve DB'ye kaydet
   Future<void> downloadAndProcessJson(
     String jsonPath,
     Function(String) onProgress,
@@ -439,13 +439,13 @@ class FirebaseStorageService {
       final ref = _storage.ref().child(jsonPath);
       final data = await ref.getData();
       if (data == null) {
-        throw Exception('JSON dosyası bulunamadı: $jsonPath');
+        throw Exception('JSON dosyasÄ± bulunamadÄ±: $jsonPath');
       }
 
       final jsonString = utf8.decode(data);
-      onProgress('JSON işleniyor: $jsonPath');
+      onProgress('JSON iÅŸleniyor: $jsonPath');
 
-      // Dosya tipine göre parse et ve DB'ye kaydet
+      // Dosya tipine gÃ¶re parse et ve DB'ye kaydet
       if (jsonPath.contains('derslistesi')) {
         final derslerData = await compute(_parseDersler, jsonString);
         await _dbHelper.batchInsert('Dersler', derslerData);
@@ -462,51 +462,51 @@ class FirebaseStorageService {
 
       onProgress('JSON kaydedildi: $jsonPath');
     } catch (e) {
-      debugPrint('JSON indirme/işleme hatası ($jsonPath): $e');
+      if (kDebugMode) debugPrint('JSON indirme/iÅŸleme hatasÄ± ($jsonPath): $e');
       rethrow;
     }
   }
 
-  /// Oyun içeriği JSON dosyalarını indir (cache destekli)
-  /// Path örnekleri: 'games/fill_blanks/levels.json', 'games/arena/questions.json'
+  /// Oyun iÃ§eriÄŸi JSON dosyalarÄ±nÄ± indir (cache destekli)
+  /// Path Ã¶rnekleri: 'games/fill_blanks/levels.json', 'games/arena/questions.json'
   Future<String?> downloadGameContent(String path) async {
     try {
-      // 1. Güvenli dosya ismi oluştur
+      // 1. GÃ¼venli dosya ismi oluÅŸtur
       final safeFileName = path.replaceAll('/', '_');
 
       // 2. Yerel dizini al
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/$safeFileName');
 
-      // 3. Dosya var mı kontrol et (cache)
+      // 3. Dosya var mÄ± kontrol et (cache)
       if (await file.exists()) {
-        debugPrint('Oyun içeriği cache\'ten okunuyor: $safeFileName');
+        if (kDebugMode) debugPrint('Oyun iÃ§eriÄŸi cache\'ten okunuyor: $safeFileName');
         return await file.readAsString();
       }
 
       // 4. Yoksa Firebase'den indir
-      debugPrint('Firebase\'den oyun içeriği indiriliyor: $path');
+      if (kDebugMode) debugPrint('Firebase\'den oyun iÃ§eriÄŸi indiriliyor: $path');
       final ref = _storage.ref().child(path);
       final data = await ref.getData();
 
       if (data == null) {
-        throw Exception('Oyun içeriği bulunamadı: $path');
+        throw Exception('Oyun iÃ§eriÄŸi bulunamadÄ±: $path');
       }
 
       final jsonString = utf8.decode(data);
 
-      // 5. Yerel hafızaya kaydet (cache)
+      // 5. Yerel hafÄ±zaya kaydet (cache)
       await file.writeAsString(jsonString);
-      debugPrint('Oyun içeriği cache\'e kaydedildi: $safeFileName');
+      if (kDebugMode) debugPrint('Oyun iÃ§eriÄŸi cache\'e kaydedildi: $safeFileName');
 
       return jsonString;
     } catch (e) {
-      debugPrint('Oyun içeriği indirme hatası ($path): $e');
+      if (kDebugMode) debugPrint('Oyun iÃ§eriÄŸi indirme hatasÄ± ($path): $e');
       return null;
     }
   }
 
-  /// Cache'deki oyun içeriğini temizle
+  /// Cache'deki oyun iÃ§eriÄŸini temizle
   Future<void> clearGameContentCache() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
@@ -514,11 +514,11 @@ class FirebaseStorageService {
       await for (var entity in dir.list()) {
         if (entity is File && entity.path.contains('games_')) {
           await entity.delete();
-          debugPrint('Cache silindi: ${entity.path}');
+          if (kDebugMode) debugPrint('Cache silindi: ${entity.path}');
         }
       }
     } catch (e) {
-      debugPrint('Cache temizleme hatası: $e');
+      if (kDebugMode) debugPrint('Cache temizleme hatasÄ±: $e');
     }
   }
 }

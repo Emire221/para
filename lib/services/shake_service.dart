@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -56,13 +57,13 @@ class ShakeService {
   /// ShakeService'i geçici olarak duraklat (oyun ekranları için)
   static void pause() {
     _isPaused = true;
-    debugPrint('⏸️ ShakeService duraklatıldı');
+    if (kDebugMode) debugPrint('⏸️ ShakeService duraklatıldı');
   }
 
   /// ShakeService'i devam ettir
   static void resume() {
     _isPaused = false;
-    debugPrint('▶️ ShakeService devam ediyor');
+    if (kDebugMode) debugPrint('▶️ ShakeService devam ediyor');
   }
 
   /// ShakeService'in duraklatılıp duraklatılmadığını kontrol et
@@ -72,7 +73,7 @@ class ShakeService {
 
   /// Shake dinlemeyi başlat
   void start() {
-    debugPrint('🔊 ShakeService başlatılıyor...');
+    if (kDebugMode) debugPrint('🔊 ShakeService başlatılıyor...');
 
     _accelerometerSubscription =
         accelerometerEventStream(
@@ -80,12 +81,12 @@ class ShakeService {
         ).listen(
           _onAccelerometerEvent,
           onError: (error) {
-            debugPrint('❌ Accelerometer hatası: $error');
+            if (kDebugMode) debugPrint('❌ Accelerometer hatası: $error');
           },
           cancelOnError: false,
         );
 
-    debugPrint('✅ ShakeService başlatıldı');
+    if (kDebugMode) debugPrint('✅ ShakeService başlatıldı');
   }
 
   /// Accelerometer event işleyici
@@ -146,7 +147,10 @@ class ShakeService {
     _shakeCount++;
     _lastShakeTime = now;
 
-    debugPrint('📳 Shake algılandı! Sayı: $_shakeCount / $_requiredShakeCount');
+    if (kDebugMode)
+      debugPrint(
+        '📳 Shake algılandı! Sayı: $_shakeCount / $_requiredShakeCount',
+      );
 
     // Yeterli shake sayısına ulaşıldı mı?
     if (_shakeCount >= _requiredShakeCount) {
@@ -158,7 +162,7 @@ class ShakeService {
 
   /// Shake aksiyonunu tetikle
   void _triggerShakeAction() {
-    debugPrint('🎉 Shake tetiklendi!');
+    if (kDebugMode) debugPrint('🎉 Shake tetiklendi!');
 
     // Titreşim feedback'i
     HapticFeedback.heavyImpact();
@@ -185,7 +189,7 @@ class ShakeService {
       final contentTypes = ContentType.values;
       final selectedType = contentTypes[random.nextInt(contentTypes.length)];
 
-      debugPrint('🎲 Seçilen içerik: $selectedType');
+      if (kDebugMode) debugPrint('🎲 Seçilen içerik: $selectedType');
 
       switch (selectedType) {
         case ContentType.test:
@@ -264,7 +268,7 @@ class ShakeService {
           break;
       }
     } catch (e) {
-      debugPrint('❌ Shake service error: $e');
+      if (kDebugMode) debugPrint('❌ Shake service error: $e');
     } finally {
       // Dialog kapandıktan sonra işlemi serbest bırak
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -466,7 +470,7 @@ class ShakeService {
 
   /// Shake dinlemeyi durdur
   void dispose() {
-    debugPrint('🛑 ShakeService durduruluyor...');
+    if (kDebugMode) debugPrint('🛑 ShakeService durduruluyor...');
     _accelerometerSubscription?.cancel();
     _accelerometerSubscription = null;
     _initialized = false;

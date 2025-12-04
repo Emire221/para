@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,7 +73,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
           _updateStatus();
         }
 
-        debugPrint('Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted');
+        if (kDebugMode) debugPrint('Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted');
       } else {
         // Sınav yok - kart yine de gösterilecek
         setState(() {
@@ -81,7 +82,7 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
         });
       }
     } catch (e) {
-      debugPrint('Sınav yükleme hatası: $e');
+      if (kDebugMode) debugPrint('Sınav yükleme hatası: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -680,3 +681,4 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
     }
   }
 }
+

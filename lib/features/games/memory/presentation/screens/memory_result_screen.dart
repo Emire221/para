@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import '../../../../../services/database_helper.dart';
@@ -77,7 +78,7 @@ class _MemoryResultScreenState extends State<MemoryResultScreen>
             '{"moves": ${widget.moves}, "mistakes": ${widget.mistakes}, "seconds": ${widget.elapsedSeconds}}',
       );
     } catch (e) {
-      debugPrint('Bul Bakalım sonucu kaydedilemedi: $e');
+      if (kDebugMode) debugPrint('Bul Bakalım sonucu kaydedilemedi: $e');
     }
   }
 
@@ -426,3 +427,4 @@ class _MemoryResultScreenState extends State<MemoryResultScreen>
     );
   }
 }
+

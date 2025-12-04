@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/database_helper.dart';
@@ -62,7 +63,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
         'Sonuç kaydedildi: ${widget.isFlashcard ? "flashcard" : "test"} - Skor: ${widget.score}',
       );
     } catch (e) {
-      debugPrint('Sonuç kaydetme hatası: $e');
+      if (kDebugMode) debugPrint('Sonuç kaydetme hatası: $e');
     }
   }
 
@@ -74,7 +75,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
       // Provider'ı yenile ki UI güncellensin
       ref.invalidate(activeMascotProvider);
     } catch (e) {
-      debugPrint('Maskot XP ekleme hatası: $e');
+      if (kDebugMode) debugPrint('Maskot XP ekleme hatası: $e');
     }
   }
 
@@ -170,3 +171,4 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
     );
   }
 }
+

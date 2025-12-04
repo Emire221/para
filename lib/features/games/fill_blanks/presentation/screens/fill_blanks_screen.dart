@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/fill_blanks_level.dart';
@@ -278,7 +279,7 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen> {
       // Maskota XP ekle
       await _addXpToMascot();
     } catch (e) {
-      debugPrint('Sonuç kaydetme hatası: $e');
+      if (kDebugMode) debugPrint('Sonuç kaydetme hatası: $e');
     }
   }
 
@@ -288,9 +289,10 @@ class _FillBlanksScreenState extends ConsumerState<FillBlanksScreen> {
       final mascotRepository = ref.read(mascotRepositoryProvider);
       await mascotRepository.addXp(1);
       ref.invalidate(activeMascotProvider);
-      debugPrint('Fill Blanks oyunu - Maskota 1 XP eklendi');
+      if (kDebugMode) debugPrint('Fill Blanks oyunu - Maskota 1 XP eklendi');
     } catch (e) {
-      debugPrint('Maskot XP ekleme hatası: $e');
+      if (kDebugMode) debugPrint('Maskot XP ekleme hatası: $e');
     }
   }
 }
+

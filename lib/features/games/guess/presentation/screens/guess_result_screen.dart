@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import '../../domain/entities/guess_level.dart';
@@ -79,7 +80,7 @@ class _GuessResultScreenState extends State<GuessResultScreen>
         totalAttempts: 0, // Controller'dan gelmediği için şimdilik 0
       );
     } catch (e) {
-      debugPrint('Salla Bakalım sonucu kaydedilemedi: $e');
+      if (kDebugMode) debugPrint('Salla Bakalım sonucu kaydedilemedi: $e');
     }
   }
 
@@ -519,3 +520,4 @@ class _GuessResultScreenState extends State<GuessResultScreen>
     );
   }
 }
+

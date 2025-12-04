@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'dart:convert';
@@ -90,7 +91,7 @@ class _OpponentSearchScreenState extends State<OpponentSearchScreen>
         }
       }
     } catch (e) {
-      debugPrint('Rakip arama hatası: $e');
+      if (kDebugMode) debugPrint('Rakip arama hatası: $e');
       if (mounted) {
         setState(() {
           _errorMessage =
@@ -311,3 +312,4 @@ class RadarPainter extends CustomPainter {
       progress != oldDelegate.progress ||
       foundOpponent != oldDelegate.foundOpponent;
 }
+
