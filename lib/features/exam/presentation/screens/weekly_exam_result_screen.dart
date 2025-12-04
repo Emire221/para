@@ -243,13 +243,30 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen> {
             style: TextStyle(fontSize: 18, color: Colors.grey),
           ),
           const SizedBox(height: 8),
-          Text(
-            '$puan',
-            style: TextStyle(
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
-              color: _getScoreColor(puan),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$puan',
+                style: TextStyle(
+                  fontSize: 64,
+                  fontWeight: FontWeight.bold,
+                  color: _getScoreColor(puan),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, left: 4),
+                child: Text(
+                  '/ 500',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -543,19 +560,21 @@ class _WeeklyExamResultScreenState extends State<WeeklyExamResultScreen> {
   }
 
   Color _getScoreColor(int score) {
-    if (score >= 80) return Colors.green;
-    if (score >= 60) return Colors.blue;
-    if (score >= 40) return Colors.orange;
+    // 500 üzerinden değerlendirme
+    if (score >= 400) return Colors.green; // %80+
+    if (score >= 300) return Colors.blue; // %60+
+    if (score >= 200) return Colors.orange; // %40+
     return Colors.red;
   }
 
   String _getScoreMessage(int score) {
-    if (score >= 90) return 'Mükemmel! 🌟';
-    if (score >= 80) return 'Harika! 🎉';
-    if (score >= 70) return 'Çok iyi! 👏';
-    if (score >= 60) return 'İyi! 👍';
-    if (score >= 50) return 'Fena değil 😊';
-    if (score >= 40) return 'Geliştirebilirsin 💪';
+    // 500 üzerinden değerlendirme
+    if (score >= 450) return 'Mükemmel! 🌟'; // %90+
+    if (score >= 400) return 'Harika! 🎉'; // %80+
+    if (score >= 350) return 'Çok iyi! 👏'; // %70+
+    if (score >= 300) return 'İyi! 👍'; // %60+
+    if (score >= 250) return 'Fena değil 😊'; // %50+
+    if (score >= 200) return 'Geliştirebilirsin 💪'; // %40+
     return 'Daha çok çalışmalısın 📚';
   }
 

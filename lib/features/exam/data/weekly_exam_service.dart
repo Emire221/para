@@ -204,9 +204,12 @@ class WeeklyExamService {
       }
     }
 
-    // Net hesapla (4 yanlış 1 doğruyu götürür formülü)
+    // 500 tam puan üzerinden hesaplama
+    // Her soru eşit puanlı: 500 / soru sayısı
+    // Yanlış cevap 1/4 doğruyu götürür
+    final soruPuani = 500.0 / exam.questions.length;
     final net = dogru - (yanlis / 4);
-    final puan = (net * 100 / exam.questions.length).round();
+    final puan = (net * soruPuani).round().clamp(0, 500);
 
     final db = await _dbHelper.database;
     await db.insert('WeeklyExamResults', {
