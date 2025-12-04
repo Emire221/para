@@ -8,6 +8,7 @@ import '../../domain/entities/temperature.dart';
 import '../../domain/entities/guess_level.dart';
 import '../widgets/thermometer_widget.dart';
 import 'guess_result_screen.dart';
+import '../../../../../services/shake_service.dart';
 
 /// Salla Bakalım Oyun Ekranı
 class GuessGameScreen extends ConsumerStatefulWidget {
@@ -32,6 +33,9 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
   @override
   void initState() {
     super.initState();
+
+    // Ana sayfa ShakeService'i duraklat (çakışmayı önlemek için)
+    ShakeService.pause();
 
     // Konfeti controller
     _confettiController = ConfettiController(
@@ -95,6 +99,8 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
     _focusNode.dispose();
     _confettiController.dispose();
     _shakeController.dispose();
+    // Ana sayfa ShakeService'i tekrar aktif et
+    ShakeService.resume();
     super.dispose();
   }
 
@@ -457,6 +463,7 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black87, // Tüm telefonlarda okunabilir renk
                   ),
                   decoration: InputDecoration(
                     hintText: 'Tahminin?',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../../features/games/arena/presentation/screens/opponent_search_screen.dart';
-import '../../features/games/guess/presentation/screens/guess_game_screen.dart';
+import '../../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../../features/games/memory/presentation/screens/memory_game_screen.dart';
 
 /// Oyunlar tab'ı
@@ -71,7 +71,9 @@ class GamesTab extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const GuessGameScreen()),
+              MaterialPageRoute(
+                builder: (context) => const GuessLevelSelectionScreen(),
+              ),
             );
           },
         ),

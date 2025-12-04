@@ -1,13 +1,13 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shake/shake.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import '../services/database_helper.dart';
 import '../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../features/games/arena/presentation/screens/opponent_search_screen.dart';
-import '../features/games/guess/presentation/screens/guess_game_screen.dart';
+import '../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../features/games/memory/presentation/screens/memory_game_screen.dart';
-import 'dart:math';
 
 /// İçerik türleri
 enum ContentType {
@@ -20,52 +20,163 @@ enum ContentType {
 }
 
 /// Telefon sallama algılama ve rastgele içerik önerme servisi
+/// sensors_plus ile daha hassas ve güvenilir algılama
 class ShakeService {
-  ShakeDetector? _shakeDetector;
   final BuildContext _context;
   final VoidCallback? onShake;
+
+  // Accelerometer subscription
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
+
+  // Shake algılama parametreleri - DAHA HASSAS
+  static const double _shakeThreshold = 12.0; // m/s² - düşürüldü (15'ten 12'ye)
+  static const Duration _shakeCooldown = Duration(
+    milliseconds: 1500,
+  ); // Cooldown süresi
+  static const Duration _shakeWindow = Duration(
+    milliseconds: 800,
+  ); // Shake penceresi
+  static const int _requiredShakeCount = 2; // Gereken shake sayısı (3'ten 2'ye)
+
+  // Durum değişkenleri
   DateTime? _lastShakeTime;
-  static const _shakeCooldown = Duration(seconds: 3);
+  DateTime? _lastTriggerTime;
+  int _shakeCount = 0;
+  bool _isProcessing = false;
+
+  // Önceki değerler (hareket tespiti için)
+  double _lastX = 0;
+  double _lastY = 0;
+  double _lastZ = 0;
+  bool _initialized = false;
+
+  // Global pause mekanizması - oyun ekranları açıkken devre dışı bırakmak için
+  static bool _isPaused = false;
+
+  /// ShakeService'i geçici olarak duraklat (oyun ekranları için)
+  static void pause() {
+    _isPaused = true;
+    debugPrint('⏸️ ShakeService duraklatıldı');
+  }
+
+  /// ShakeService'i devam ettir
+  static void resume() {
+    _isPaused = false;
+    debugPrint('▶️ ShakeService devam ediyor');
+  }
+
+  /// ShakeService'in duraklatılıp duraklatılmadığını kontrol et
+  static bool get isPaused => _isPaused;
 
   ShakeService(this._context, {this.onShake});
 
   /// Shake dinlemeyi başlat
   void start() {
-    _shakeDetector = ShakeDetector.autoStart(
-      onPhoneShake: (_) {
-        _handleShake();
-      },
-      minimumShakeCount: 1, // Tek sallama yeterli
-      shakeSlopTimeMS: 300, // Daha hızlı tepki
-      shakeCountResetTime: 1500,
-      shakeThresholdGravity: 1.8, // Daha hassas algılama
-    );
+    debugPrint('🔊 ShakeService başlatılıyor...');
+
+    _accelerometerSubscription =
+        accelerometerEventStream(
+          samplingPeriod: const Duration(milliseconds: 50), // 20 Hz örnekleme
+        ).listen(
+          _onAccelerometerEvent,
+          onError: (error) {
+            debugPrint('❌ Accelerometer hatası: $error');
+          },
+          cancelOnError: false,
+        );
+
+    debugPrint('✅ ShakeService başlatıldı');
   }
 
-  /// Shake olayını işle
-  void _handleShake() {
-    // Çok sık sallama engellemek için cooldown kontrolü
-    final now = DateTime.now();
-    if (_lastShakeTime != null &&
-        now.difference(_lastShakeTime!) < _shakeCooldown) {
+  /// Accelerometer event işleyici
+  void _onAccelerometerEvent(AccelerometerEvent event) {
+    // Duraklatılmışsa veya işlem yapılıyorsa çık
+    if (_isPaused || _isProcessing) return;
+
+    final double x = event.x;
+    final double y = event.y;
+    final double z = event.z;
+
+    if (!_initialized) {
+      _lastX = x;
+      _lastY = y;
+      _lastZ = z;
+      _initialized = true;
       return;
     }
+
+    // Delta hesapla (ani hareket)
+    final double deltaX = (x - _lastX).abs();
+    final double deltaY = (y - _lastY).abs();
+    final double deltaZ = (z - _lastZ).abs();
+
+    // Toplam ivme değişimi
+    final double acceleration = sqrt(
+      deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ,
+    );
+
+    // Değerleri güncelle
+    _lastX = x;
+    _lastY = y;
+    _lastZ = z;
+
+    // Shake algılama
+    if (acceleration > _shakeThreshold) {
+      _onShakeDetected();
+    }
+  }
+
+  /// Shake algılandığında
+  void _onShakeDetected() {
+    final now = DateTime.now();
+
+    // Cooldown kontrolü
+    if (_lastTriggerTime != null &&
+        now.difference(_lastTriggerTime!) < _shakeCooldown) {
+      return;
+    }
+
+    // Shake penceresi kontrolü
+    if (_lastShakeTime != null &&
+        now.difference(_lastShakeTime!) > _shakeWindow) {
+      // Pencere dışında, sayacı sıfırla
+      _shakeCount = 0;
+    }
+
+    _shakeCount++;
     _lastShakeTime = now;
 
-    // Titreşim feedback'i ver
-    HapticFeedback.mediumImpact();
+    debugPrint('📳 Shake algılandı! Sayı: $_shakeCount / $_requiredShakeCount');
 
-    // Custom callback varsa çağır
+    // Yeterli shake sayısına ulaşıldı mı?
+    if (_shakeCount >= _requiredShakeCount) {
+      _shakeCount = 0;
+      _lastTriggerTime = now;
+      _triggerShakeAction();
+    }
+  }
+
+  /// Shake aksiyonunu tetikle
+  void _triggerShakeAction() {
+    debugPrint('🎉 Shake tetiklendi!');
+
+    // Titreşim feedback'i
+    HapticFeedback.heavyImpact();
+
+    // Custom callback
     if (onShake != null) {
       onShake!();
     }
 
-    // Rastgele içerik öner
+    // Dialog göster
     _showRandomContentDialog();
   }
 
-  /// Rastgele içerik seç ve dialog göster (Test, Bilgi Kartları veya Oyunlar)
+  /// Rastgele içerik seç ve dialog göster
   Future<void> _showRandomContentDialog() async {
+    if (_isProcessing) return;
+    _isProcessing = true;
+
     try {
       final db = await DatabaseHelper().database;
       final random = Random();
@@ -73,6 +184,8 @@ class ShakeService {
       // Tüm içerik türlerinden rastgele birini seç
       final contentTypes = ContentType.values;
       final selectedType = contentTypes[random.nextInt(contentTypes.length)];
+
+      debugPrint('🎲 Seçilen içerik: $selectedType');
 
       switch (selectedType) {
         case ContentType.test:
@@ -126,7 +239,7 @@ class ShakeService {
               Navigator.push(
                 _context,
                 MaterialPageRoute(
-                  builder: (context) => const GuessGameScreen(),
+                  builder: (context) => const GuessLevelSelectionScreen(),
                 ),
               );
             },
@@ -151,8 +264,12 @@ class ShakeService {
           break;
       }
     } catch (e) {
-      // Hata durumunda sessizce devam et
-      debugPrint('Shake service error: $e');
+      debugPrint('❌ Shake service error: $e');
+    } finally {
+      // Dialog kapandıktan sonra işlemi serbest bırak
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _isProcessing = false;
+      });
     }
   }
 
@@ -160,7 +277,6 @@ class ShakeService {
   Future<void> _showTestContent(dynamic db, Random random) async {
     final tests = await db.query('Tests', limit: 100);
     if (tests.isEmpty) {
-      // Test yoksa oyun öner
       _showGameContent(
         title: '🎮 Salla Bakalım',
         description: 'Telefonu salla ve sayıyı tahmin et!',
@@ -170,7 +286,9 @@ class ShakeService {
           Navigator.of(_context).pop();
           Navigator.push(
             _context,
-            MaterialPageRoute(builder: (context) => const GuessGameScreen()),
+            MaterialPageRoute(
+              builder: (context) => const GuessLevelSelectionScreen(),
+            ),
           );
         },
       );
@@ -196,7 +314,6 @@ class ShakeService {
   Future<void> _showFlashcardContent(dynamic db, Random random) async {
     final flashcards = await db.query('Flashcards', limit: 100);
     if (flashcards.isEmpty) {
-      // Kart yoksa oyun öner
       _showGameContent(
         title: '🔢 Bul Bakalım',
         description: '1\'den 10\'a kadar sırayla bul!',
@@ -255,9 +372,12 @@ class ShakeService {
     required Color color,
     required VoidCallback onAction,
   }) {
+    if (!_context.mounted) return;
+
     showDialog(
       context: _context,
-      builder: (context) => AlertDialog(
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
@@ -316,7 +436,7 @@ class ShakeService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
               'Belki Sonra',
               style: TextStyle(color: Colors.grey[600]),
@@ -339,11 +459,17 @@ class ShakeService {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      _isProcessing = false;
+    });
   }
 
   /// Shake dinlemeyi durdur
   void dispose() {
-    _shakeDetector?.stopListening();
+    debugPrint('🛑 ShakeService durduruluyor...');
+    _accelerometerSubscription?.cancel();
+    _accelerometerSubscription = null;
+    _initialized = false;
+    _shakeCount = 0;
   }
 }
