@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../../features/games/arena/presentation/screens/opponent_search_screen.dart';
+import '../../features/games/guess/presentation/screens/guess_game_screen.dart';
+import '../../features/games/memory/presentation/screens/memory_game_screen.dart';
 
 /// Oyunlar tab'ı
 class GamesTab extends StatelessWidget {
@@ -54,6 +56,38 @@ class GamesTab extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => const OpponentSearchScreen(),
               ),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildGameCard(
+          context,
+          title: 'Salla Bakalım',
+          description: 'Telefonu salla, sayıyı tahmin et!',
+          icon: Icons.vibration,
+          gradient: LinearGradient(
+            colors: [Colors.teal.shade400, Colors.cyan.shade600],
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const GuessGameScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildGameCard(
+          context,
+          title: 'Bul Bakalım',
+          description: '1\'den 10\'a kadar sırayla bul!',
+          icon: Icons.grid_view_rounded,
+          gradient: LinearGradient(
+            colors: [Colors.indigo.shade400, Colors.purple.shade600],
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MemoryGameScreen()),
             );
           },
         ),

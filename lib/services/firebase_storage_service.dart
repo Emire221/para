@@ -308,6 +308,7 @@ class FirebaseStorageService {
       int processedLevels = 0;
       int processedArenaSets = 0;
       int processedWeeklyExams = 0;
+      int processedGuessLevels = 0;
       int skippedFiles = 0;
 
       for (var item in allFiles) {
@@ -381,6 +382,24 @@ class FirebaseStorageService {
                 'Haftalık Sınav işlendi (eski veriler silindi): $fileName',
               );
             }
+            // Salla Bakalım (Guess) dosyası mı kontrol et (guessID veya sallaID alanı var mı?)
+            else if (jsonData is Map<String, dynamic> &&
+                (jsonData.containsKey('guessID') ||
+                    jsonData.containsKey('sallaID'))) {
+              // Sadece DB'de olan kolonları içeren yeni map oluştur
+              final guessData = <String, dynamic>{
+                'levelID': jsonData['guessID'] ?? jsonData['sallaID'],
+                'title': jsonData['title'],
+                'description': jsonData['description'],
+                'difficulty': jsonData['difficulty'],
+                'questions': jsonData.containsKey('questions')
+                    ? json.encode(jsonData['questions'])
+                    : '[]',
+              };
+              await _dbHelper.insertGuessLevel(guessData);
+              processedGuessLevels++;
+              debugPrint('Salla Bakalım Level işlendi: $fileName');
+            }
             // Ne test ne bilgi kartı ne de oyun dosyası değilse
             else {
               skippedFiles++;
@@ -395,11 +414,13 @@ class FirebaseStorageService {
 
       debugPrint(
         'İşlem özeti: $processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, $skippedFiles atlanan dosya',
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, '
+        '$processedGuessLevels salla bakalım, $skippedFiles atlanan dosya',
       );
       onProgress(
         'İçerik veritabanına kaydedildi ($processedTests test, $processedFlashcards bilgi kartı, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav)',
+        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalık sınav, '
+        '$processedGuessLevels salla bakalım)',
       );
     } catch (e) {
       debugPrint('Yerel içerik işleme hatası: $e');

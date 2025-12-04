@@ -9,6 +9,7 @@ abstract class IDatabaseHelper {
   Future<void> insertFillBlanksLevel(Map<String, dynamic> row);
   Future<void> insertArenaSet(Map<String, dynamic> row);
   Future<void> insertWeeklyExam(Map<String, dynamic> row);
+  Future<void> insertGuessLevel(Map<String, dynamic> row);
   Future<Map<String, dynamic>?> getLatestWeeklyExam();
   Future<void> clearOldWeeklyExamData(String newExamId);
   Future<void> clearAllData();
@@ -37,7 +38,7 @@ class DatabaseHelper implements IDatabaseHelper {
     String path = join(await getDatabasesPath(), 'bilgi_avcisi.db');
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -230,6 +231,17 @@ class DatabaseHelper implements IDatabaseHelper {
         completedAt TEXT
       )
     ''');
+
+    // Salla Bakalım (Guess) Tablosu
+    await db.execute('''
+      CREATE TABLE GuessLevels(
+        levelID TEXT PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        difficulty INTEGER,
+        questions TEXT
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -383,6 +395,19 @@ class DatabaseHelper implements IDatabaseHelper {
           weekStart TEXT,
           duration INTEGER,
           description TEXT,
+          questions TEXT
+        )
+      ''');
+    }
+
+    if (oldVersion < 9) {
+      // Salla Bakalım (Guess) Tablosu
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS GuessLevels(
+          levelID TEXT PRIMARY KEY,
+          title TEXT,
+          description TEXT,
+          difficulty INTEGER,
           questions TEXT
         )
       ''');
@@ -668,6 +693,58 @@ class DatabaseHelper implements IDatabaseHelper {
     }
   }
 
+  /// Salla Bakalım sonuçlarını kaydet (son 10 oyun tutulur)
+  Future<void> saveGuessResult({
+    required int score,
+    required int correctCount,
+    required int totalQuestions,
+    required String levelTitle,
+    required int difficulty,
+    required int totalAttempts,
+  }) async {
+    Database db = await database;
+
+    // Yeni sonucu kaydet
+    await db.insert('GameResults', {
+      'gameType': 'guess',
+      'score': score,
+      'correctCount': correctCount,
+      'wrongCount': totalQuestions - correctCount,
+      'totalQuestions': totalQuestions,
+      'completedAt': DateTime.now().toIso8601String(),
+      'details':
+          '{"levelTitle": "$levelTitle", "difficulty": $difficulty, "totalAttempts": $totalAttempts}',
+    });
+
+    // Salla Bakalım için son 10 kaydı tut, eskilerini sil
+    await _cleanOldGuessResults(db);
+  }
+
+  Future<void> _cleanOldGuessResults(Database db) async {
+    // Salla Bakalım kayıt sayısını al
+    final countResult = await db.rawQuery(
+      "SELECT COUNT(*) as count FROM GameResults WHERE gameType = 'guess'",
+    );
+    final count = Sqflite.firstIntValue(countResult) ?? 0;
+
+    // Eğer 10'dan fazla kayıt varsa, en eskileri sil
+    if (count > 10) {
+      final deleteCount = count - 10;
+      await db.rawDelete(
+        '''
+        DELETE FROM GameResults 
+        WHERE id IN (
+          SELECT id FROM GameResults 
+          WHERE gameType = 'guess'
+          ORDER BY completedAt ASC 
+          LIMIT ?
+        )
+      ''',
+        [deleteCount],
+      );
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getGameResults(String gameType) async {
     Database db = await database;
     return await db.query(
@@ -728,6 +805,60 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
       'SELECT * FROM ArenaSets WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
+      [difficulty],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  // ============================================================
+  // Salla Bakalım (Guess) Metodları
+  // ============================================================
+
+  /// Guess Level ekleme
+  @override
+  Future<void> insertGuessLevel(Map<String, dynamic> row) async {
+    Database db = await database;
+    await db.insert(
+      'GuessLevels',
+      row,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Tüm Guess seviyelerini getir
+  Future<List<Map<String, dynamic>>> getGuessLevels() async {
+    Database db = await database;
+    return await db.query('GuessLevels', orderBy: 'difficulty ASC, title ASC');
+  }
+
+  /// Belirli bir Guess seviyesini getir
+  Future<Map<String, dynamic>?> getGuessLevel(String levelId) async {
+    Database db = await database;
+    final results = await db.query(
+      'GuessLevels',
+      where: 'levelID = ?',
+      whereArgs: [levelId],
+      limit: 1,
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Rastgele Guess seviyesi getir
+  Future<Map<String, dynamic>?> getRandomGuessLevel() async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM GuessLevels ORDER BY RANDOM() LIMIT 1',
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  /// Belirli zorluk seviyesinden rastgele Guess level çeker
+  Future<Map<String, dynamic>?> getRandomGuessByDifficulty(
+    int difficulty,
+  ) async {
+    Database db = await database;
+    final List<Map<String, dynamic>> results = await db.rawQuery(
+      'SELECT * FROM GuessLevels WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
       [difficulty],
     );
     return results.isNotEmpty ? results.first : null;
