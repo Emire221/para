@@ -1,5 +1,8 @@
 # Manifest ve Arşiv Yönetim Araçları
 
+**Son Güncelleme:** 4 Aralık 2025  
+**Versiyon:** v1.3.0
+
 Bu klasörde, Firebase Storage'daki dosyalarınızı yönetmek için yardımcı araçlar bulunur.
 
 ## 1. Arşiv İçeriği Analiz Aracı
@@ -60,10 +63,22 @@ dart tools/generate_manifest.dart storage/3_Sinif
 ├── test_matematik_1.json
 ├── bilgikart_1.json     # kartSetID alanı içermeli
 ├── bilgikart_2.json     # kartSetID alanı içermeli
+├── level_001.json       # levelID alanı içermeli (Cümle Tamamlama)
+├── arena_001.json       # arenaSetID alanı içermeli (Arena Düello)
+├── guess_001.json       # guessID alanı içermeli (Salla Bakalım)
 └── ... (diğer test ve bilgi kartı dosyaları)
 ```
 
-**ÖNEMLİ:** Tüm test ve bilgi kartı JSON dosyaları doğrudan arşivin kök dizininde olmalıdır. Alt klasör kullanmayın!
+**Desteklenen ID Tipleri:**
+| ID Alanı | Oyun/İçerik | Tablo |
+|----------|-------------|-------|
+| testID | Test | Testler |
+| kartSetID | Bilgi Kartı | BilgiKartlari |
+| levelID | Cümle Tamamlama | FillBlanksLevels |
+| arenaSetID | Arena Düello | ArenaSets |
+| guessID | Salla Bakalım | GuessLevels |
+
+**ÖNEMLİ:** Tüm JSON dosyaları doğrudan arşivin kök dizininde olmalıdır. Alt klasör kullanmayın!
 
 ### Manifest Güncelleme
 

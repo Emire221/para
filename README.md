@@ -13,6 +13,7 @@
 ## 📋 İçindekiler
 
 - [Özellikler](#-özellikler)
+- [Ekranlar](#-ekranlar)
 - [Teknoloji Stack](#-teknoloji-stack)
 - [Mimari](#-mimari)
 - [Kurulum](#-kurulum)
@@ -40,19 +41,27 @@
 - **Bildirimler**: Yeni içerik ve hatırlatmalar
 - **Türkçe Localization**: Tam Türkçe tarih ve zaman desteği
 
-### 🎮 Gamification
-- **"Bunu Biliyor Musun?"**: Günlük ilginç bilgiler
-- **Salla ve Çöz**: Shake gesture ile rastgele soru
-- **Cümle Tamamlama**: Drag & drop oyunu (veritabanı entegreli)
-- **Arena Modu**: Fake live duel sistemi (veritabanı entegreli)
+### 🎮 Mini Oyunlar (4 Oyun)
+- **Cümle Tamamlama**: Drag & drop ile boşluk doldurma (seviye seçimli)
+- **Arena Düello**: Botlarla yarış modu
+- **Salla Bakalım**: Telefonu salla, sayıyı tahmin et (seviye seçimli)
+- **Bul Bakalım**: 1'den 10'a kadar sıralı hafıza oyunu
 - **Maskot Sistemi**: Öğrenme sürecinde eşlik eden sanal arkadaş
 
-### 📝 Türkiye Geneli Deneme Sınavı
+### 📳 Akıllı Shake Sistemi
+- **Ana Sayfa Shake**: Telefonu salla, rastgele içerik önerisi al
+- **sensors_plus ile Hassas Algılama**: Daha güvenilir shake detection
+- **Çakışma Önleme**: Oyun ekranlarında otomatik devre dışı (pause/resume)
+- **İçerik Türleri**: Test, Bilgi Kartı veya 4 oyundan rastgele biri
+
+### 📝 Türkiye Geneli Haftalık Sınav
+- **500 Tam Puan**: Her sınav 500 puan üzerinden değerlendirilir
 - **Haftalık Sınav**: Her hafta yeni sınav yayınlanır
 - **Zaman Duyarlı**: Pazartesi 00:00 - Çarşamba 23:59 arası aktif
 - **Tek Giriş Hakkı**: Kullanıcı sınava sadece 1 kez girebilir
 - **Sonuç Beklemesi**: Pazar 12:00'da sonuçlar açıklanır
 - **Türkiye Sıralaması**: Tüm katılımcılar arasında sıralama
+- **4 Yanlış = 1 Doğru**: Net hesaplama formülü
 - **Otomatik Temizlik**: Yeni sınav geldiğinde eski veriler silinir
 
 ### 🔄 Akıllı Sync Sistemi
@@ -61,6 +70,69 @@
 - **tar.bz2 Formatı**: Optimize edilmiş sıkıştırma
 - **İnkremental Sync**: Bandwidth tasarrufu
 - **Veritabanı İlk Depolama**: Tüm oyun içerikleri lokal SQLite'ta
+
+---
+
+## 📱 Ekranlar
+
+Uygulamada toplam **29 ekran** bulunmaktadır:
+
+### 🔐 Giriş ve Kimlik Doğrulama (3 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 1 | Splash Screen | Uygulama başlangıç ekranı |
+| 2 | Login Screen | Giriş/Kayıt ekranı |
+| 3 | Profile Setup Screen | Profil kurulum ekranı |
+
+### 🏠 Ana Uygulama (5 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 4 | Main Screen | Tab Host (Bottom Navigation) |
+| 5 | Home Tab | Ana sayfa |
+| 6 | Lessons Tab | Dersler sekmesi |
+| 7 | Games Tab | Oyunlar sekmesi |
+| 8 | Profile Tab | Profil sekmesi |
+
+### 📚 Ders ve İçerik (6 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 9 | Subject Selection | Ders seçimi |
+| 10 | Unit Selection | Ünite seçimi |
+| 11 | Test Screen | Test çözme ekranı |
+| 12 | Flashcards Screen | Bilgi kartları |
+| 13 | Result Screen | Sonuç ekranı |
+| 14 | Achievements Screen | Başarılar (5 tab) |
+
+### 🎮 Oyunlar (9 Ekran)
+| # | Ekran | Oyun |
+|---|-------|------|
+| 15 | Level Selection | Cümle Tamamlama - Seviye Seç |
+| 16 | Fill Blanks Screen | Cümle Tamamlama - Oyun |
+| 17 | Opponent Search | Arena Düello - Rakip Ara |
+| 18 | Arena Screen | Arena Düello - Oyun |
+| 19 | Guess Level Selection | Salla Bakalım - Seviye Seç |
+| 20 | Guess Game Screen | Salla Bakalım - Oyun |
+| 21 | Guess Result Screen | Salla Bakalım - Sonuç |
+| 22 | Memory Game Screen | Bul Bakalım - Oyun |
+| 23 | Memory Result Screen | Bul Bakalım - Sonuç |
+
+### 📝 Haftalık Sınav (2 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 24 | Weekly Exam Screen | Sınav çözme ekranı |
+| 25 | Weekly Exam Result | Sınav sonuçları (500 puan üzerinden) |
+
+### 👾 Maskot (1 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 26 | Mascot Selection | Maskot seçim ekranı |
+
+### ⚙️ Ayarlar (3 Ekran)
+| # | Ekran | Açıklama |
+|---|-------|----------|
+| 27 | Settings Screen | Ayarlar |
+| 28 | Privacy Policy | Gizlilik Politikası |
+| 29 | Terms of Service | Kullanım Koşulları |
 
 ---
 
@@ -90,12 +162,16 @@
 - **Google Fonts** `^6.2.1` - Özel fontlar
 - **Lottie** `^3.1.0` - Animasyonlar
 - **Cached Network Image** `^3.4.1` - Resim cache
+- **Confetti** `^0.7.0` - Kutlama animasyonları
+
+### Sensors & Games
+- **sensors_plus** `^6.1.1` - Accelerometer (Ana sayfa shake detection)
+- **Shake** `^3.0.0` - Shake gesture (Oyun içi)
 
 ### Utilities
 - **Archive** `^3.3.7` - tar.bz2 sıkıştırma/açma desteği
 - **Logger** `^2.5.0` - Logging
 - **Timezone** `^0.9.2` - Zaman dilimi yönetimi
-- **Shake** `^3.0.0` - Shake gesture detection
 - **Intl** `^0.19.0` - Internationalization (Türkçe desteği)
 
 ### Development
@@ -130,7 +206,9 @@ lib/
 │   │   └── presentation/
 │   ├── games/             # Mini oyunlar
 │   │   ├── fill_blanks/  # Cümle tamamlama
-│   │   └── arena/        # Arena düello
+│   │   ├── arena/        # Arena düello
+│   │   ├── guess/        # Salla Bakalım
+│   │   └── memory/       # Bul Bakalım
 │   └── sync/              # Senkronizasyon
 │
 ├── models/                # Veri modelleri (Freezed)
@@ -310,6 +388,16 @@ CREATE TABLE ArenaSets (
   questions TEXT -- JSON
 );
 
+-- Guess Levels (Salla Bakalım)
+CREATE TABLE GuessLevels (
+  guessID TEXT PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  difficulty INTEGER,
+  category TEXT,
+  questions TEXT -- JSON
+);
+
 -- Game Results
 CREATE TABLE GameResults (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -320,6 +408,15 @@ CREATE TABLE GameResults (
   totalQuestions INTEGER,
   completedAt TEXT,
   details TEXT
+);
+
+-- Memory Game Results (Bul Bakalım)
+CREATE TABLE MemoryGameResults (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  moves INTEGER,
+  timeTaken INTEGER,
+  mistakes INTEGER,
+  completedAt TEXT
 );
 
 -- User Pets (Maskot)
@@ -358,7 +455,7 @@ CREATE TABLE WeeklyExamResults (
   dogru INTEGER,
   yanlis INTEGER,
   bos INTEGER,
-  puan INTEGER,
+  puan INTEGER, -- 500 üzerinden
   siralama INTEGER,
   toplamKatilimci INTEGER,
   completedAt TEXT
@@ -437,6 +534,36 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
 ---
 
 ## 📝 Son Güncellemeler
+
+### [v1.3.0] - 2025-12-04
+
+#### Added ✨
+- **Salla Bakalım Oyunu**: Telefonu sallayarak sayı tahmin etme (10 seviyeli)
+- **Bul Bakalım Oyunu**: 1-10 arası sıralı hafıza oyunu
+- **Guess Level Selection**: Salla Bakalım seviye seçim ekranı
+- **sensors_plus Entegrasyonu**: Ana sayfa shake algılama daha hassas ve güvenilir
+- **ShakeService pause/resume**: Oyun ekranlarında çakışma önleme mekanizması
+- **500 Puan Sistemi**: Haftalık sınav puanlaması 500 tam puan üzerinden
+- **Confetti Kutlamaları**: Oyun sonunda konfeti animasyonları
+
+#### Fixed 🐛
+- **Shake Çakışması**: Salla Bakalım oyununda hem oyun hem ana sayfa shake çalışıyordu
+- **TextField Görünürlük**: Sayı girişi bazı telefonlarda saydam görünüyordu (Colors.black87)
+- **ShakeService Typo**: `f  }` → `  }` düzeltildi
+
+#### Changed 🔄
+- **Haftalık Sınav Puanlama**: Yüzde yerine 500 tam puan üzerinden
+- **Sonuç Ekranı**: "X / 500" formatında gösterim
+- **Renk/Mesaj Eşikleri**: 500 üzerinden yeniden ayarlandı
+- **Games Tab**: Oyun kartları 4 oyuna genişletildi
+
+### İstatistikler
+- 📝 15+ dosya güncellendi
+- ➕ 1500+ satır eklendi
+- 🎮 2 yeni oyun eklendi
+- ✅ 0 lint hatası
+
+---
 
 ### [v1.2.0] - 2025-12-04
 
@@ -532,7 +659,7 @@ Bu proje özel mülkiyettir. Tüm hakları saklıdır.
 
 **Geliştirici**: Emire221  
 **Son Güncelleme**: 4 Aralık 2025  
-**Versiyon**: 1.2.0
+**Versiyon**: 1.3.0
 
 ---
 
