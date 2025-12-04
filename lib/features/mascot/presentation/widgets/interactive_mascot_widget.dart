@@ -16,7 +16,7 @@ final talkingMascotServiceProvider = Provider<TalkingMascotService>((ref) {
 class InteractiveMascotWidget extends ConsumerStatefulWidget {
   final double? height;
   final bool enableVoiceInteraction;
-  
+
   const InteractiveMascotWidget({
     super.key,
     this.height,
@@ -24,41 +24,43 @@ class InteractiveMascotWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<InteractiveMascotWidget> createState() => _InteractiveMascotWidgetState();
+  ConsumerState<InteractiveMascotWidget> createState() =>
+      _InteractiveMascotWidgetState();
 }
 
-class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidget>
+class _InteractiveMascotWidgetState
+    extends ConsumerState<InteractiveMascotWidget>
     with TickerProviderStateMixin {
   late AnimationController _idleController;
   late AnimationController _talkingController;
   late AnimationController _bounceController;
   late Animation<double> _bounceAnimation;
-  
+
   bool _isRecording = false;
   bool _isPlaying = false;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Idle animasyon (hafif sallanma)
     _idleController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     // Konuşma animasyonu
     _talkingController = AnimationController(
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    
+
     // Zıplama animasyonu (dokunulduğunda)
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _bounceAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
     );
@@ -74,18 +76,18 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
 
   Future<void> _onTapDown() async {
     if (!widget.enableVoiceInteraction) return;
-    
+
     _bounceController.forward();
-    
+
     // Kayıt başlat
     final service = ref.read(talkingMascotServiceProvider);
     final started = await service.startRecording();
-    
+
     if (started) {
       setState(() {
         _isRecording = true;
       });
-      
+
       // Kayıt animasyonu başlat
       _talkingController.repeat(reverse: true);
     }
@@ -93,18 +95,18 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
 
   Future<void> _onTapUp() async {
     if (!widget.enableVoiceInteraction) return;
-    
+
     _bounceController.reverse();
-    
+
     if (_isRecording) {
       final service = ref.read(talkingMascotServiceProvider);
       await service.stopRecording();
-      
+
       setState(() {
         _isRecording = false;
         _isPlaying = true;
       });
-      
+
       // Sincap sesiyle çal
       await service.playRecordingWithPitchShift(
         pitchMultiplier: 1.6, // İnce ses
@@ -144,9 +146,7 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
       },
       loading: () => SizedBox(
         height: mascotHeight,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: const Center(child: CircularProgressIndicator()),
       ),
       error: (_, __) => const SizedBox.shrink(),
     );
@@ -162,16 +162,13 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
         builder: (context, child) {
           // Idle sallanma efekti
           final idleOffset = (_idleController.value - 0.5) * 10;
-          
+
           // Konuşma/zıplama scale
           final scale = _bounceAnimation.value;
-          
+
           return Transform.translate(
             offset: Offset(0, idleOffset),
-            child: Transform.scale(
-              scale: scale,
-              child: child,
-            ),
+            child: Transform.scale(scale: scale, child: child),
           );
         },
         child: Stack(
@@ -193,7 +190,7 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
                   ],
                 ),
               ),
-            
+
             // Maskot Lottie animasyonu
             SizedBox(
               height: height,
@@ -204,27 +201,18 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
                 repeat: true,
               ),
             ),
-            
+
             // Kayıt göstergesi
             if (_isRecording)
-              Positioned(
-                top: 10,
-                child: _buildRecordingIndicator(),
-              ),
-            
+              Positioned(top: 10, child: _buildRecordingIndicator()),
+
             // Oynatma göstergesi
             if (_isPlaying)
-              Positioned(
-                top: 10,
-                child: _buildPlayingIndicator(),
-              ),
-            
+              Positioned(top: 10, child: _buildPlayingIndicator()),
+
             // "Bana dokun" ipucu (ilk kullanım için)
             if (!_isRecording && !_isPlaying && widget.enableVoiceInteraction)
-              Positioned(
-                bottom: 0,
-                child: _buildTouchHint(),
-              ),
+              Positioned(bottom: 0, child: _buildTouchHint()),
           ],
         ),
       ),
@@ -309,10 +297,7 @@ class _InteractiveMascotWidgetState extends ConsumerState<InteractiveMascotWidge
           SizedBox(width: 6),
           Text(
             'Basılı tut ve konuş',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 12),
           ),
         ],
       ),

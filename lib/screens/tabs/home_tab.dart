@@ -6,7 +6,10 @@ import '../../widgets/daily_fact_widget.dart';
 
 /// Ana sayfa tab'ı - Tam ekran interaktif maskot ile Talking Tom benzeri deneyim
 class HomeTab extends StatelessWidget {
-  const HomeTab({super.key});
+  /// Tab değiştirme callback'i (0: Ana Sayfa, 1: Dersler, 2: Oyunlar, 3: Profil)
+  final void Function(int tabIndex)? onNavigateToTab;
+
+  const HomeTab({super.key, this.onNavigateToTab});
 
   @override
   Widget build(BuildContext context) {
@@ -17,20 +20,18 @@ class HomeTab extends StatelessWidget {
       children: [
         // Katman 1: Arka plan dekorasyonları
         _buildBackgroundDecorations(context, isDarkMode),
-        
+
         // Katman 2: Gradyan arka plan
         _buildGradientBackground(context, isDarkMode),
-        
+
         // Katman 3: Büyük interaktif maskot (ortada)
         Positioned(
           top: screenHeight * 0.08,
           left: 0,
           right: 0,
-          child: const InteractiveMascotWidget(
-            enableVoiceInteraction: true,
-          ),
+          child: const InteractiveMascotWidget(enableVoiceInteraction: true),
         ),
-        
+
         // Katman 4: Kaydırılabilir içerik (DraggableScrollableSheet)
         DraggableScrollableSheet(
           initialChildSize: 0.35,
@@ -91,7 +92,7 @@ class HomeTab extends StatelessWidget {
         children: [
           // Sürükleme tutacağı
           _buildDragHandle(isDarkMode),
-          
+
           // İçerik listesi
           Expanded(
             child: ListView(
@@ -260,6 +261,7 @@ class HomeTab extends StatelessWidget {
           title: 'Ders Çalış',
           color: Colors.blue,
           isDarkMode: isDarkMode,
+          onTap: () => onNavigateToTab?.call(1), // Dersler tab'ı
         ),
         _buildQuickActionCard(
           context,
@@ -267,6 +269,8 @@ class HomeTab extends StatelessWidget {
           title: 'Sınav Ol',
           color: Colors.orange,
           isDarkMode: isDarkMode,
+          onTap: () =>
+              onNavigateToTab?.call(1), // Dersler tab'ı (sınavlar orada)
         ),
         _buildQuickActionCard(
           context,
@@ -274,6 +278,7 @@ class HomeTab extends StatelessWidget {
           title: 'Oyun Oyna',
           color: Colors.purple,
           isDarkMode: isDarkMode,
+          onTap: () => onNavigateToTab?.call(2), // Oyunlar tab'ı
         ),
         _buildQuickActionCard(
           context,
@@ -281,6 +286,8 @@ class HomeTab extends StatelessWidget {
           title: 'Sıralama',
           color: Colors.amber,
           isDarkMode: isDarkMode,
+          onTap: () =>
+              onNavigateToTab?.call(3), // Profil tab'ı (sıralama orada)
         ),
       ],
     );
@@ -292,16 +299,14 @@ class HomeTab extends StatelessWidget {
     required String title,
     required Color color,
     required bool isDarkMode,
+    VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.8),
-            color.withValues(alpha: 0.6),
-          ],
+          colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.6)],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -316,9 +321,7 @@ class HomeTab extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navigasyon eklenecek
-          },
+          onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(

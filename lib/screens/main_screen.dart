@@ -23,21 +23,35 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   int _currentIndex = 0;
   ShakeService? _shakeService;
 
-  final List<Widget> _tabs = const [
-    HomeTab(),
-    LessonsTab(),
-    GamesTab(),
-    ProfileTab(),
-  ];
+  // Tab'ları geç başlat (callback ile)
+  late final List<Widget> _tabs;
 
   @override
   void initState() {
     super.initState();
+
+    // Tab'ları callback ile oluştur
+    _tabs = [
+      HomeTab(onNavigateToTab: _navigateToTab),
+      const LessonsTab(),
+      const GamesTab(),
+      const ProfileTab(),
+    ];
+
     // Shake servisi başlatma (build sonrası)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _shakeService = ShakeService(context);
       _shakeService?.start();
     });
+  }
+
+  /// Belirtilen tab'a geçiş yapar
+  void _navigateToTab(int index) {
+    if (index >= 0 && index < _tabs.length) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   @override
