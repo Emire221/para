@@ -110,9 +110,9 @@ class HomeTab extends ConsumerWidget {
               controller: scrollController,
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               children: [
-                const DailyFactWidget(),
-                const SizedBox(height: 16),
                 _buildWelcomeCard(context, isDarkMode, userProfileAsync),
+                const SizedBox(height: 16),
+                const DailyFactWidget(),
                 const SizedBox(height: 16),
                 _buildQuickActionsGrid(context, isDarkMode),
               ],
@@ -279,12 +279,12 @@ class HomeTab extends ConsumerWidget {
           color: Colors.blue,
           isDarkMode: isDarkMode,
           onTap: () {
-            // Süper bilgi kartları ders seçim ekranına yönlendir
+            // Süper Bilgi Kartları (flashcard) ders seçim ekranına yönlendir
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
-                    const LessonSelectionScreen(mode: 'supercard'),
+                    const LessonSelectionScreen(mode: 'flashcard'),
               ),
             );
           },
@@ -296,12 +296,11 @@ class HomeTab extends ConsumerWidget {
           color: Colors.orange,
           isDarkMode: isDarkMode,
           onTap: () {
-            // Şifre Kırma Operasyonu ders seçim ekranına yönlendir
+            // Şifre Kırma Operasyonu (test) ders seçim ekranına yönlendir
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const LessonSelectionScreen(mode: 'codebreaker'),
+                builder: (context) => const LessonSelectionScreen(mode: 'test'),
               ),
             );
           },

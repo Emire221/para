@@ -92,7 +92,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
           districtsSet.add(normalizedDistrict);
         }
       }
-      final districts = districtsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      final districts = districtsSet.toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
       if (mounted) {
         setState(() {
@@ -120,10 +121,18 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       _selectedDistrict = district;
       _selectedSchoolID = null;
       // Büyük/küçük harf duyarsız karşılaştırma
-      _filteredSchools = _schools.where((s) => 
-        s.ilce.toLowerCase().trim() == district.toLowerCase().trim()
-      ).toList()
-        ..sort((a, b) => a.okulAdi.toLowerCase().compareTo(b.okulAdi.toLowerCase()));
+      _filteredSchools =
+          _schools
+              .where(
+                (s) =>
+                    s.ilce.toLowerCase().trim() ==
+                    district.toLowerCase().trim(),
+              )
+              .toList()
+            ..sort(
+              (a, b) =>
+                  a.okulAdi.toLowerCase().compareTo(b.okulAdi.toLowerCase()),
+            );
     });
   }
 
@@ -286,14 +295,23 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     // Okul Seçimi (Arama özellikli)
                     _buildSearchableField(
                       label: _selectedSchoolID != null
-                          ? _filteredSchools.firstWhere(
-                              (s) => s.okulID == _selectedSchoolID,
-                              orElse: () => School(okulID: '', okulAdi: 'Okul Seçiniz', il: '', ilce: ''),
-                            ).okulAdi
+                          ? _filteredSchools
+                                .firstWhere(
+                                  (s) => s.okulID == _selectedSchoolID,
+                                  orElse: () => School(
+                                    okulID: '',
+                                    okulAdi: 'Okul Seçiniz',
+                                    il: '',
+                                    ilce: '',
+                                  ),
+                                )
+                                .okulAdi
                           : 'Okul Seçiniz',
                       icon: Icons.school,
                       enabled: _selectedDistrict != null,
-                      onTap: _selectedDistrict == null ? null : _showSchoolPicker,
+                      onTap: _selectedDistrict == null
+                          ? null
+                          : _showSchoolPicker,
                     ),
                     const SizedBox(height: 16),
 
@@ -476,7 +494,8 @@ class _SearchablePickerSheet<T> extends StatefulWidget {
   });
 
   @override
-  State<_SearchablePickerSheet<T>> createState() => _SearchablePickerSheetState<T>();
+  State<_SearchablePickerSheet<T>> createState() =>
+      _SearchablePickerSheetState<T>();
 }
 
 class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
@@ -522,7 +541,9 @@ class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Column(
               children: [
@@ -552,7 +573,9 @@ class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Ara...',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     prefixIcon: const Icon(Icons.search, color: Colors.white70),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.1),
@@ -560,7 +583,10 @@ class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -572,7 +598,9 @@ class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
                 ? Center(
                     child: Text(
                       'Sonuç bulunamadı',
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
                     ),
                   )
                 : ListView.builder(
