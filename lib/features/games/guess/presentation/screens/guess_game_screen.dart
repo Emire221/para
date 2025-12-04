@@ -63,10 +63,10 @@ class _GuessGameScreenState extends ConsumerState<GuessGameScreen>
       onPhoneShake: (_) {
         _onShakeDetected();
       },
-      minimumShakeCount: 2,
-      shakeSlopTimeMS: 500,
-      shakeCountResetTime: 2000,
-      shakeThresholdGravity: 2.5,
+      minimumShakeCount: 1, // 2'den 1'e düşürüldü - tek sallama yeterli
+      shakeSlopTimeMS: 300, // 500'den 300'e - daha hızlı tepki
+      shakeCountResetTime: 1500, // 2000'den 1500'e
+      shakeThresholdGravity: 1.8, // 2.5'ten 1.8'e - daha hassas algılama
     );
   }
 

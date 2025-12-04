@@ -9,7 +9,12 @@ class TimeService {
 
   /// Gerçek zamanı worldtimeapi.org'dan alır ve cihaz saati ile karşılaştırır
   /// 5 dakikadan fazla fark varsa exception fırlatır
+  /// NOT: Test/deneme için geçici olarak devre dışı bırakıldı
   Future<void> validateTime() async {
+    // TODO: Production'da bu satırı kaldır
+    return; // Geçici olarak devre dışı
+
+    // ignore: dead_code
     try {
       // Gerçek zamanı API'den al
       final realTime = await _fetchRealTime();
