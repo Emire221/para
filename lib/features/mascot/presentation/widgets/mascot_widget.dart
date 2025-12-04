@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../domain/entities/mascot.dart';
 import '../providers/mascot_provider.dart';
 import '../../../../core/gamification/mascot_logic.dart';
@@ -206,46 +207,45 @@ class _MascotWidgetState extends ConsumerState<MascotWidget>
   }
 
   Widget _buildMascotAvatar(Mascot mascot) {
-    final IconData icon = _getMascotIcon(mascot.petType);
     final Color color = _getPetColor(mascot.petType);
 
     return Container(
-      width: 80,
-      height: 80,
+      width: 90,
+      height: 90,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 12,
-            spreadRadius: 2,
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 16,
+            spreadRadius: 4,
           ),
         ],
       ),
-      child: Icon(icon, size: 50, color: color),
+      child: ClipOval(
+        clipBehavior: Clip.none, // Overflow/pop-out efekti için
+        child: Transform.scale(
+          scale: 1.3, // Maskotun biraz taşması için
+          child: Lottie.asset(
+            mascot.petType.getLottiePath(),
+            width: 85,
+            height: 85,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
     );
-  }
-
-  IconData _getMascotIcon(PetType petType) {
-    switch (petType) {
-      case PetType.fox:
-        return Icons.favorite;
-      case PetType.cat:
-        return Icons.pets;
-      case PetType.robot:
-        return Icons.smart_toy;
-    }
   }
 
   Color _getPetColor(PetType petType) {
     switch (petType) {
-      case PetType.fox:
-        return Colors.orange;
       case PetType.cat:
+        return Colors.orange;
+      case PetType.dog:
+        return Colors.brown;
+      case PetType.rabbit:
         return Colors.pink;
-      case PetType.robot:
-        return Colors.blue;
     }
   }
 }

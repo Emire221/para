@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../../domain/entities/mascot.dart';
 import '../providers/mascot_provider.dart';
 import '../../../../screens/main_screen.dart';
@@ -163,9 +164,9 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildPetEgg(PetType.fox, Icons.favorite, Colors.orange),
-                    _buildPetEgg(PetType.cat, Icons.pets, Colors.pink),
-                    _buildPetEgg(PetType.robot, Icons.smart_toy, Colors.blue),
+                    _buildPetEgg(PetType.cat),
+                    _buildPetEgg(PetType.dog),
+                    _buildPetEgg(PetType.rabbit),
                   ],
                 ),
               ),
@@ -176,7 +177,7 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
     );
   }
 
-  Widget _buildPetEgg(PetType petType, IconData icon, Color color) {
+  Widget _buildPetEgg(PetType petType) {
     final isSelected = _selectedPetType == petType;
 
     return GestureDetector(
@@ -192,13 +193,33 @@ class _PetSelectionScreenState extends ConsumerState<PetSelectionScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 100,
+                  width: 110,
                   height: 140,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(60),
+                    border: isSelected
+                        ? Border.all(color: Colors.white, width: 3)
+                        : null,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
                   ),
-                  child: Center(child: Icon(icon, size: 60, color: color)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(60),
+                    child: Lottie.asset(
+                      petType.getLottiePath(),
+                      width: 100,
+                      height: 130,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(

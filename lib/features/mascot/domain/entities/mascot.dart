@@ -1,17 +1,43 @@
+import 'package:flutter/material.dart';
+
 // Maskot türleri
 enum PetType {
-  fox,
   cat,
-  robot;
+  dog,
+  rabbit;
 
   String get displayName {
     switch (this) {
-      case PetType.fox:
-        return 'Tilki';
       case PetType.cat:
         return 'Kedi';
-      case PetType.robot:
-        return 'Robot';
+      case PetType.dog:
+        return 'Köpek';
+      case PetType.rabbit:
+        return 'Tavşan';
+    }
+  }
+
+  /// Lottie animasyon dosya yolu
+  String getLottiePath() {
+    switch (this) {
+      case PetType.cat:
+        return 'assets/animation/kedi_mascot.json';
+      case PetType.dog:
+        return 'assets/animation/kopek_mascot.json';
+      case PetType.rabbit:
+        return 'assets/animation/tavsan_mascot.json';
+    }
+  }
+
+  /// Maskot rengi
+  Color get color {
+    switch (this) {
+      case PetType.cat:
+        return const Color(0xFFFF6B9D); // Pembe
+      case PetType.dog:
+        return const Color(0xFFFFB347); // Turuncu
+      case PetType.rabbit:
+        return const Color(0xFF87CEEB); // Açık Mavi
     }
   }
 }
@@ -73,7 +99,7 @@ class Mascot {
       id: map['id'] as int?,
       petType: PetType.values.firstWhere(
         (e) => e.name == map['petType'],
-        orElse: () => PetType.fox,
+        orElse: () => PetType.cat, // Varsayılan cat
       ),
       petName: map['petName'] as String,
       currentXp: map['currentXp'] as int? ?? 0,
