@@ -77,13 +77,22 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       _selectedCity = city;
       _selectedDistrict = null;
       _selectedSchoolID = null;
+      _filteredSchools = [];
       _isLoading = true;
       _loadingMessage = 'Okullar yükleniyor...';
     });
 
     try {
       final schools = await FirebaseStorageService().downloadSchoolData(city);
-      final districts = schools.map((e) => e.ilce).toSet().toList()..sort();
+      // İlçeleri normalize ederek karşılaştır ve benzersiz olanları al
+      final districtsSet = <String>{};
+      for (final school in schools) {
+        final normalizedDistrict = school.ilce.trim();
+        if (normalizedDistrict.isNotEmpty) {
+          districtsSet.add(normalizedDistrict);
+        }
+      }
+      final districts = districtsSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
       if (mounted) {
         setState(() {
@@ -110,7 +119,11 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     setState(() {
       _selectedDistrict = district;
       _selectedSchoolID = null;
-      _filteredSchools = _schools.where((s) => s.ilce == district).toList();
+      // Büyük/küçük harf duyarsız karşılaştırma
+      _filteredSchools = _schools.where((s) => 
+        s.ilce.toLowerCase().trim() == district.toLowerCase().trim()
+      ).toList()
+        ..sort((a, b) => a.okulAdi.toLowerCase().compareTo(b.okulAdi.toLowerCase()));
     });
   }
 
@@ -261,49 +274,26 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // İlçe Seçimi
-                    DropdownButtonFormField<String>(
-                      // ignore: deprecated_member_use
-                      initialValue: _selectedDistrict,
-                      dropdownColor: const Color(0xFF11998e),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecoration('İlçe Seçiniz', Icons.map),
-                      items: _districts
-                          .map(
-                            (d) => DropdownMenuItem(value: d, child: Text(d)),
-                          )
-                          .toList(),
-                      onChanged: _selectedCity == null
-                          ? null
-                          : _onDistrictChanged,
+                    // İlçe Seçimi (Arama özellikli)
+                    _buildSearchableField(
+                      label: _selectedDistrict ?? 'İlçe Seçiniz',
+                      icon: Icons.map,
+                      enabled: _selectedCity != null,
+                      onTap: _selectedCity == null ? null : _showDistrictPicker,
                     ),
                     const SizedBox(height: 16),
 
-                    // Okul Seçimi
-                    DropdownButtonFormField<String>(
-                      // ignore: deprecated_member_use
-                      initialValue: _selectedSchoolID,
-                      dropdownColor: const Color(0xFF11998e),
-                      style: const TextStyle(color: Colors.white),
-                      isExpanded: true,
-                      decoration: _inputDecoration(
-                        'Okul Seçiniz',
-                        Icons.school,
-                      ),
-                      items: _filteredSchools
-                          .map(
-                            (s) => DropdownMenuItem(
-                              value: s.okulID,
-                              child: Text(
-                                s.okulAdi,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: _selectedDistrict == null
-                          ? null
-                          : (v) => setState(() => _selectedSchoolID = v),
+                    // Okul Seçimi (Arama özellikli)
+                    _buildSearchableField(
+                      label: _selectedSchoolID != null
+                          ? _filteredSchools.firstWhere(
+                              (s) => s.okulID == _selectedSchoolID,
+                              orElse: () => School(okulID: '', okulAdi: 'Okul Seçiniz', il: '', ilce: ''),
+                            ).okulAdi
+                          : 'Okul Seçiniz',
+                      icon: Icons.school,
+                      enabled: _selectedDistrict != null,
+                      onTap: _selectedDistrict == null ? null : _showSchoolPicker,
                     ),
                     const SizedBox(height: 16),
 
@@ -388,5 +378,224 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       ),
     );
   }
+
+  /// Arama özellikli seçim alanı
+  Widget _buildSearchableField({
+    required String label,
+    required IconData icon,
+    required bool enabled,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: enabled ? 0.1 : 0.05),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: enabled ? Colors.white : Colors.white54),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: enabled ? Colors.white : Colors.white54,
+                  fontSize: 16,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(
+              Icons.arrow_drop_down,
+              color: enabled ? Colors.white : Colors.white54,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// İlçe seçici dialog
+  void _showDistrictPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SearchablePickerSheet<String>(
+        title: 'İlçe Seçiniz',
+        items: _districts,
+        itemBuilder: (district) => district,
+        searchMatcher: (district, query) =>
+            district.toLowerCase().contains(query.toLowerCase()),
+        onSelected: (district) {
+          Navigator.pop(context);
+          _onDistrictChanged(district);
+        },
+      ),
+    );
+  }
+
+  /// Okul seçici dialog
+  void _showSchoolPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _SearchablePickerSheet<School>(
+        title: 'Okul Seçiniz',
+        items: _filteredSchools,
+        itemBuilder: (school) => school.okulAdi,
+        searchMatcher: (school, query) =>
+            school.okulAdi.toLowerCase().contains(query.toLowerCase()),
+        onSelected: (school) {
+          Navigator.pop(context);
+          setState(() => _selectedSchoolID = school.okulID);
+        },
+      ),
+    );
+  }
 }
 
+/// Arama özellikli seçici bottom sheet
+class _SearchablePickerSheet<T> extends StatefulWidget {
+  final String title;
+  final List<T> items;
+  final String Function(T) itemBuilder;
+  final bool Function(T, String) searchMatcher;
+  final void Function(T) onSelected;
+
+  const _SearchablePickerSheet({
+    required this.title,
+    required this.items,
+    required this.itemBuilder,
+    required this.searchMatcher,
+    required this.onSelected,
+  });
+
+  @override
+  State<_SearchablePickerSheet<T>> createState() => _SearchablePickerSheetState<T>();
+}
+
+class _SearchablePickerSheetState<T> extends State<_SearchablePickerSheet<T>> {
+  final _searchController = TextEditingController();
+  List<T> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredItems = widget.items;
+      } else {
+        _filteredItems = widget.items
+            .where((item) => widget.searchMatcher(item, query))
+            .toList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Color(0xFF11998e),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Başlık
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Tutacak
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white54,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Arama alanı
+                TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Ara...',
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Liste
+          Expanded(
+            child: _filteredItems.isEmpty
+                ? Center(
+                    child: Text(
+                      'Sonuç bulunamadı',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _filteredItems[index];
+                      return ListTile(
+                        title: Text(
+                          widget.itemBuilder(item),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        onTap: () => widget.onSelected(item),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.white54,
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
