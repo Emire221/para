@@ -147,10 +147,11 @@ class ShakeService {
     _shakeCount++;
     _lastShakeTime = now;
 
-    if (kDebugMode)
+    if (kDebugMode) {
       debugPrint(
         '📳 Shake algılandı! Sayı: $_shakeCount / $_requiredShakeCount',
       );
+    }
 
     // Yeterli shake sayısına ulaşıldı mı?
     if (_shakeCount >= _requiredShakeCount) {
