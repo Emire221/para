@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import '../../util/app_colors.dart';
 import '../../features/mascot/presentation/widgets/interactive_mascot_widget.dart';
 import '../../widgets/daily_fact_widget.dart';
+import '../../core/providers/user_provider.dart';
+import '../lesson_selection_screen.dart';
+import '../achievements_screen.dart';
 
 /// Ana sayfa tab'ı - Tam ekran interaktif maskot ile Talking Tom benzeri deneyim
-class HomeTab extends StatelessWidget {
+class HomeTab extends ConsumerWidget {
   /// Tab değiştirme callback'i (0: Ana Sayfa, 1: Dersler, 2: Oyunlar, 3: Profil)
   final void Function(int tabIndex)? onNavigateToTab;
 
   const HomeTab({super.key, this.onNavigateToTab});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
+    final userProfileAsync = ref.watch(userProfileProvider);
 
     return Stack(
       children: [
@@ -40,7 +45,12 @@ class HomeTab extends StatelessWidget {
           snap: true,
           snapSizes: const [0.35, 0.6, 0.85],
           builder: (context, scrollController) {
-            return _buildContentSheet(context, scrollController, isDarkMode);
+            return _buildContentSheet(
+              context,
+              scrollController,
+              isDarkMode,
+              userProfileAsync,
+            );
           },
         ),
       ],
@@ -73,6 +83,7 @@ class HomeTab extends StatelessWidget {
     BuildContext context,
     ScrollController scrollController,
     bool isDarkMode,
+    AsyncValue<Map<String, dynamic>?> userProfileAsync,
   ) {
     return Container(
       decoration: BoxDecoration(
@@ -101,7 +112,7 @@ class HomeTab extends StatelessWidget {
               children: [
                 const DailyFactWidget(),
                 const SizedBox(height: 16),
-                _buildWelcomeCard(context, isDarkMode),
+                _buildWelcomeCard(context, isDarkMode, userProfileAsync),
                 const SizedBox(height: 16),
                 _buildQuickActionsGrid(context, isDarkMode),
               ],
@@ -200,7 +211,13 @@ class HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeCard(BuildContext context, bool isDarkMode) {
+  Widget _buildWelcomeCard(
+    BuildContext context,
+    bool isDarkMode,
+    AsyncValue<Map<String, dynamic>?> userProfileAsync,
+  ) {
+    final userName = userProfileAsync.asData?.value?['name'] ?? 'Bilgi Avcısı';
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
@@ -222,7 +239,7 @@ class HomeTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hoş Geldin, Bilgi Avcısı! 🎯',
+                'Hoş Geldin, $userName! 🎯',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -257,20 +274,37 @@ class HomeTab extends StatelessWidget {
       children: [
         _buildQuickActionCard(
           context,
-          icon: Icons.school,
-          title: 'Ders Çalış',
+          icon: Icons.check_circle,
+          title: 'Doğru mu Yanlış mı',
           color: Colors.blue,
           isDarkMode: isDarkMode,
-          onTap: () => onNavigateToTab?.call(1), // Dersler tab'ı
+          onTap: () {
+            // Süper bilgi kartları ders seçim ekranına yönlendir
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const LessonSelectionScreen(mode: 'supercard'),
+              ),
+            );
+          },
         ),
         _buildQuickActionCard(
           context,
           icon: Icons.quiz,
-          title: 'Sınav Ol',
+          title: 'Test Çöz',
           color: Colors.orange,
           isDarkMode: isDarkMode,
-          onTap: () =>
-              onNavigateToTab?.call(1), // Dersler tab'ı (sınavlar orada)
+          onTap: () {
+            // Şifre Kırma Operasyonu ders seçim ekranına yönlendir
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const LessonSelectionScreen(mode: 'codebreaker'),
+              ),
+            );
+          },
         ),
         _buildQuickActionCard(
           context,
@@ -283,11 +317,18 @@ class HomeTab extends StatelessWidget {
         _buildQuickActionCard(
           context,
           icon: Icons.emoji_events,
-          title: 'Sıralama',
+          title: 'Başarılarım',
           color: Colors.amber,
           isDarkMode: isDarkMode,
-          onTap: () =>
-              onNavigateToTab?.call(3), // Profil tab'ı (sıralama orada)
+          onTap: () {
+            // Başarılarım ekranına yönlendir
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AchievementsScreen(),
+              ),
+            );
+          },
         ),
       ],
     );
