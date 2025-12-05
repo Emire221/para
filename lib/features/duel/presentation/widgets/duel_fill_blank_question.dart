@@ -42,9 +42,9 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         // Seçenekler (Grid)
         Expanded(
           flex: 3,
@@ -70,7 +70,7 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
 
     for (int i = 0; i < parts.length; i++) {
       spans.add(TextSpan(text: parts[i]));
-      
+
       if (i < parts.length - 1) {
         // Boşluk alanı
         String blankText = '______';
@@ -154,7 +154,7 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            
+
             // İşaretler
             if (isAnswered) ...[
               const SizedBox(width: 4),
@@ -165,7 +165,11 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
                     color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.person, color: Colors.white, size: 12),
+                  child: const Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 12,
+                  ),
                 ),
               if (isBotSelected) ...[
                 if (isUserSelected) const SizedBox(width: 2),
@@ -175,7 +179,11 @@ class DuelFillBlankQuestionWidget extends StatelessWidget {
                     color: Colors.orange,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.smart_toy, color: Colors.white, size: 12),
+                  child: const Icon(
+                    Icons.smart_toy,
+                    color: Colors.white,
+                    size: 12,
+                  ),
                 ),
               ],
             ],

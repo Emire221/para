@@ -31,8 +31,10 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
-    
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
+
     // Kazandıysa confetti başlat
     if (widget.result == DuelResult.win) {
       _confettiController.play();
@@ -50,7 +52,9 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
     return Stack(
       children: [
         Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -58,9 +62,9 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
               children: [
                 // Sonuç ikonu
                 _buildResultIcon(),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Sonuç başlığı
                 Text(
                   _getResultTitle(),
@@ -70,21 +74,18 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
                     color: _getResultColor(),
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Alt başlık
                 Text(
                   _getResultSubtitle(),
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Skor özeti
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -96,18 +97,18 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildScoreColumn('Sen', widget.userScore, Colors.blue),
-                      Container(
-                        width: 2,
-                        height: 50,
-                        color: Colors.grey[300],
+                      Container(width: 2, height: 50, color: Colors.grey[300]),
+                      _buildScoreColumn(
+                        widget.botName,
+                        widget.botScore,
+                        Colors.orange,
                       ),
-                      _buildScoreColumn(widget.botName, widget.botScore, Colors.orange),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Butonlar
                 Row(
                   children: [
@@ -144,7 +145,7 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
             ),
           ),
         ),
-        
+
         // Confetti
         Align(
           alignment: Alignment.topCenter,
@@ -171,7 +172,7 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
   Widget _buildResultIcon() {
     IconData icon;
     Color color;
-    
+
     switch (widget.result) {
       case DuelResult.win:
         icon = Icons.emoji_events;
@@ -235,10 +236,7 @@ class _DuelResultDialogState extends State<DuelResultDialog> {
       children: [
         Text(
           name,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

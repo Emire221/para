@@ -1,7 +1,7 @@
 import 'dart:math';
 
 /// Bot'un akıllı cevap verme mantığını yöneten controller
-/// 
+///
 /// Algoritma:
 /// - Kullanıcı öndeyse: Bot doğru cevap verir (yakalamak için)
 /// - Kullanıcı gerideyse: Bot yanlış cevap verir (kullanıcının yakalaması için)
@@ -11,7 +11,7 @@ class BotLogicController {
   int _botScore = 0;
   int _drawCount = 0;
   int _currentQuestionIndex = 0;
-  
+
   final Random _random = Random();
 
   // Getters
@@ -82,8 +82,4 @@ class BotLogicController {
 }
 
 /// Düello sonuç enum'u
-enum DuelResult {
-  win,
-  lose,
-  draw,
-}
+enum DuelResult { win, lose, draw }

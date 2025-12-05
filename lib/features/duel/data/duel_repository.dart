@@ -13,10 +13,10 @@ class DuelRepository {
   Future<List<DuelQuestion>> getTestQuestions({int count = 5}) async {
     try {
       final db = await _dbHelper.database;
-      
+
       // Tüm testleri çek
       final tests = await db.query('Tests');
-      
+
       if (tests.isEmpty) {
         if (kDebugMode) debugPrint('❌ Hiç test bulunamadı');
         return _getDefaultTestQuestions();
@@ -32,13 +32,15 @@ class DuelRepository {
             final List<dynamic> questions = json.decode(questionsJson);
             for (int i = 0; i < questions.length; i++) {
               final q = questions[i];
-              allQuestions.add(DuelQuestion(
-                id: '${test['testID']}_$i',
-                question: q['soru'] ?? '',
-                options: List<String>.from(q['secenekler'] ?? []),
-                correctIndex: q['dogruCevap'] ?? 0,
-                imageUrl: q['resim'],
-              ));
+              allQuestions.add(
+                DuelQuestion(
+                  id: '${test['testID']}_$i',
+                  question: q['soru'] ?? '',
+                  options: List<String>.from(q['secenekler'] ?? []),
+                  correctIndex: q['dogruCevap'] ?? 0,
+                  imageUrl: q['resim'],
+                ),
+              );
             }
           } catch (e) {
             if (kDebugMode) debugPrint('Soru parse hatası: $e');
@@ -60,13 +62,15 @@ class DuelRepository {
   }
 
   /// Cümle tamamlama sorularını çeker
-  Future<List<DuelFillBlankQuestion>> getFillBlankQuestions({int count = 5}) async {
+  Future<List<DuelFillBlankQuestion>> getFillBlankQuestions({
+    int count = 5,
+  }) async {
     try {
       final db = await _dbHelper.database;
-      
+
       // Fill Blanks levellarını çek
       final levels = await db.query('FillBlanksLevels');
-      
+
       if (levels.isEmpty) {
         if (kDebugMode) debugPrint('❌ Hiç fill blanks level bulunamadı');
         return _getDefaultFillBlankQuestions();
@@ -82,12 +86,16 @@ class DuelRepository {
             final List<dynamic> questions = json.decode(questionsJson);
             for (int i = 0; i < questions.length; i++) {
               final q = questions[i];
-              allQuestions.add(DuelFillBlankQuestion(
-                id: '${level['levelID']}_$i',
-                sentence: q['sentence'] ?? q['cumle'] ?? '',
-                answer: q['answer'] ?? q['cevap'] ?? '',
-                options: List<String>.from(q['options'] ?? q['secenekler'] ?? []),
-              ));
+              allQuestions.add(
+                DuelFillBlankQuestion(
+                  id: '${level['levelID']}_$i',
+                  sentence: q['sentence'] ?? q['cumle'] ?? '',
+                  answer: q['answer'] ?? q['cevap'] ?? '',
+                  options: List<String>.from(
+                    q['options'] ?? q['secenekler'] ?? [],
+                  ),
+                ),
+              );
             }
           } catch (e) {
             if (kDebugMode) debugPrint('Soru parse hatası: $e');
@@ -132,7 +140,12 @@ class DuelRepository {
       const DuelQuestion(
         id: 'default_4',
         question: 'Su hangi elementlerden oluşur?',
-        options: ['Karbon ve Oksijen', 'Hidrojen ve Oksijen', 'Azot ve Oksijen', 'Helyum ve Hidrojen'],
+        options: [
+          'Karbon ve Oksijen',
+          'Hidrojen ve Oksijen',
+          'Azot ve Oksijen',
+          'Helyum ve Hidrojen',
+        ],
         correctIndex: 1,
       ),
       const DuelQuestion(

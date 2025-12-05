@@ -25,13 +25,11 @@ class GamesTab extends StatelessWidget {
           style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 24),
-        
+
         // 1v1 Düello kartı (en üstte, öne çıkarılmış)
-        DuelGameCard(
-          onTap: () => showDuelSelectionSheet(context),
-        ),
+        DuelGameCard(onTap: () => showDuelSelectionSheet(context)),
         const SizedBox(height: 16),
-        
+
         _buildGameCard(
           context,
           title: 'Cümle Tamamlama',

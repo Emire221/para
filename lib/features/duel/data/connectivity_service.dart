@@ -8,14 +8,15 @@ class ConnectivityService {
   static Future<bool> hasInternetConnection() async {
     try {
       // Google DNS'e bağlanmayı dene
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 5));
-      
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 5));
+
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         if (kDebugMode) debugPrint('✅ İnternet bağlantısı var');
         return true;
       }
-      
+
       if (kDebugMode) debugPrint('❌ İnternet bağlantısı yok');
       return false;
     } on SocketException catch (_) {

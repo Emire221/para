@@ -43,10 +43,7 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.orange.shade300,
-                Colors.orange.shade600,
-              ],
+              colors: [Colors.orange.shade300, Colors.orange.shade600],
             ),
           ),
           child: SafeArea(
@@ -62,7 +59,7 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
                       ? controller.testQuestions.length
                       : controller.fillBlankQuestions.length,
                 ),
-                
+
                 // Soru alanı
                 Expanded(
                   child: Container(
@@ -84,7 +81,7 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
                         : _buildFillBlankQuestion(state, controller),
                   ),
                 ),
-                
+
                 // Bot durumu göstergesi
                 _buildBotStatus(state),
               ],
@@ -149,24 +146,20 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
             const SizedBox(width: 8),
             Text(
               '${state.botProfile?.name ?? "Rakip"} düşünüyor...',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ] else if (state.botAnsweredCorrectly != null) ...[
             Icon(
               state.botAnsweredCorrectly! ? Icons.check_circle : Icons.cancel,
-              color: state.botAnsweredCorrectly! ? Colors.greenAccent : Colors.redAccent,
+              color: state.botAnsweredCorrectly!
+                  ? Colors.greenAccent
+                  : Colors.redAccent,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               '${state.botProfile?.name ?? "Rakip"} ${state.botAnsweredCorrectly! ? "doğru" : "yanlış"} cevapladı',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ],
         ],
@@ -180,7 +173,9 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Düellodan Çık'),
-        content: const Text('Düellodan çıkmak istediğine emin misin? Bu düello kaybedilmiş sayılacak.'),
+        content: const Text(
+          'Düellodan çıkmak istediğine emin misin? Bu düello kaybedilmiş sayılacak.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -203,7 +198,11 @@ class _DuelGameScreenState extends ConsumerState<DuelGameScreen> {
     );
   }
 
-  void _showResultDialog(BuildContext context, DuelResult result, DuelState state) {
+  void _showResultDialog(
+    BuildContext context,
+    DuelResult result,
+    DuelState state,
+  ) {
     showDialog(
       context: context,
       barrierDismissible: false,

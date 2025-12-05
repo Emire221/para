@@ -1,17 +1,8 @@
 /// Düello oyun türleri
-enum DuelGameType {
-  test,
-  fillBlanks,
-}
+enum DuelGameType { test, fillBlanks }
 
 /// Düello durumları
-enum DuelStatus {
-  idle,
-  searching,
-  found,
-  playing,
-  finished,
-}
+enum DuelStatus { idle, searching, found, playing, finished }
 
 /// Düello soru entity'si
 class DuelQuestion {

@@ -30,7 +30,7 @@ class DuelSelectionSheet extends ConsumerWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Başlık
           const Row(
             children: [
@@ -38,26 +38,20 @@ class DuelSelectionSheet extends ConsumerWidget {
               SizedBox(width: 12),
               Text(
                 '1v1 Düello',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
             'Rakibinle yarış! Hangi oyun türünde mücadele etmek istersin?',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Test Çözme seçeneği
           _buildOptionCard(
             context,
@@ -68,9 +62,9 @@ class DuelSelectionSheet extends ConsumerWidget {
             color: Colors.blue,
             gameType: DuelGameType.test,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Cümle Tamamlama seçeneği
           _buildOptionCard(
             context,
@@ -81,7 +75,7 @@ class DuelSelectionSheet extends ConsumerWidget {
             color: Colors.purple,
             gameType: DuelGameType.fillBlanks,
           ),
-          
+
           const SizedBox(height: 24),
         ],
       ),
@@ -131,10 +125,7 @@ class DuelSelectionSheet extends ConsumerWidget {
                   ),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -158,9 +149,8 @@ class DuelSelectionSheet extends ConsumerWidget {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Colors.orange),
-      ),
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator(color: Colors.orange)),
     );
 
     // İnternet kontrolü
@@ -186,9 +176,7 @@ class DuelSelectionSheet extends ConsumerWidget {
     if (context.mounted) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const MatchmakingScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const MatchmakingScreen()),
       );
     }
   }

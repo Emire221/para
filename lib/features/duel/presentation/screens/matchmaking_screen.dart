@@ -19,7 +19,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   late AnimationController _pulseController;
   late AnimationController _rotateController;
   late Animation<double> _pulseAnimation;
-  
+
   String _statusText = 'Rakip Aranıyor...';
   bool _isFound = false;
   final Random _random = Random();
@@ -27,17 +27,17 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Pulse animasyonu
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    
+
     // Rotate animasyonu
     _rotateController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -57,8 +57,10 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
 
   Future<void> _startMatchmaking() async {
     // Soruları yükle
-    final success = await ref.read(duelControllerProvider.notifier).loadQuestions();
-    
+    final success = await ref
+        .read(duelControllerProvider.notifier)
+        .loadQuestions();
+
     if (!success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -71,13 +73,13 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
 
     // Rastgele bekleme süresi (3-5 saniye)
     final waitTime = 3000 + _random.nextInt(2000);
-    
+
     // Durum mesajlarını değiştir
     _updateStatusMessages();
-    
+
     // Bekleme süresi
     await Future.delayed(Duration(milliseconds: waitTime));
-    
+
     if (!mounted) return;
 
     // Rakip bulundu
@@ -88,18 +90,16 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
 
     // Kısa bir bekleme ve oyuna geç
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     if (!mounted) return;
 
     // Oyunu başlat
     ref.read(duelControllerProvider.notifier).startGame();
-    
+
     // Oyun ekranına git
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DuelGameScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const DuelGameScreen()),
     );
   }
 
@@ -134,10 +134,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.orange.shade400,
-              Colors.deepOrange.shade600,
-            ],
+            colors: [Colors.orange.shade400, Colors.deepOrange.shade600],
           ),
         ),
         child: SafeArea(
@@ -146,14 +143,17 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
             children: [
               // Oyun türü
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  state.gameType == DuelGameType.test 
-                      ? '🎯 Test Çözme' 
+                  state.gameType == DuelGameType.test
+                      ? '🎯 Test Çözme'
                       : '📝 Cümle Tamamlama',
                   style: const TextStyle(
                     color: Colors.white,
@@ -162,7 +162,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 40),
 
               // Animasyonlu avatar alanı
@@ -207,7 +207,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                         ),
                 ),
               ),
-              
+
               const SizedBox(height: 30),
 
               // Durum metni
@@ -223,7 +223,7 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
 
               // Bot ismi (bulunduğunda)
@@ -249,11 +249,13 @@ class _MatchmakingScreenState extends ConsumerState<MatchmakingScreen>
                   width: 200,
                   child: LinearProgressIndicator(
                     backgroundColor: Colors.white.withValues(alpha: 0.3),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Colors.white,
+                    ),
                   ),
                 ),
               ],
-              
+
               const SizedBox(height: 40),
 
               // İptal butonu

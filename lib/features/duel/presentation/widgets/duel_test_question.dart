@@ -40,9 +40,9 @@ class DuelTestQuestion extends StatelessWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 20),
-        
+
         // Şıklar
         Expanded(
           flex: 3,
@@ -115,20 +115,17 @@ class DuelTestQuestion extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Seçenek metni
               Expanded(
                 child: Text(
                   question.options[index],
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: textColor,
-                  ),
+                  style: TextStyle(fontSize: 16, color: textColor),
                 ),
               ),
-              
+
               // İşaretler
               if (isAnswered) ...[
                 if (isUserSelected)
@@ -138,7 +135,11 @@ class DuelTestQuestion extends StatelessWidget {
                       color: Colors.blue,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 14),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ),
                 if (isBotSelected) ...[
                   if (isUserSelected) const SizedBox(width: 4),
@@ -148,7 +149,11 @@ class DuelTestQuestion extends StatelessWidget {
                       color: Colors.orange,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.smart_toy, color: Colors.white, size: 14),
+                    child: const Icon(
+                      Icons.smart_toy,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ),
                 ],
               ],

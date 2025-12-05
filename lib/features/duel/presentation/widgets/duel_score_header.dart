@@ -40,9 +40,9 @@ class DuelScoreHeader extends StatelessWidget {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Skor kartları
           Row(
             children: [
@@ -55,7 +55,7 @@ class DuelScoreHeader extends StatelessWidget {
                   isUser: true,
                 ),
               ),
-              
+
               // VS
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -79,7 +79,7 @@ class DuelScoreHeader extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Bot skoru
               Expanded(
                 child: _buildScoreCard(
@@ -108,10 +108,7 @@ class DuelScoreHeader extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8),
         ],
       ),
       child: Column(
