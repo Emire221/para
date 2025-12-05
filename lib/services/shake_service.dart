@@ -8,15 +8,10 @@ import '../services/database_helper.dart';
 import '../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../features/games/memory/presentation/screens/memory_game_screen.dart';
+import '../features/duel/presentation/screens/duel_selection_screen.dart';
 
 /// İçerik türleri
-enum ContentType {
-  test,
-  flashcard,
-  fillBlanks,
-  sallabakalim,
-  bulbakalim,
-}
+enum ContentType { test, flashcard, fillBlanks, sallabakalim, bulbakalim, duel }
 
 /// Telefon sallama algılama ve rastgele içerik önerme servisi
 /// sensors_plus ile daha hassas ve güvenilir algılama
@@ -245,6 +240,18 @@ class ShakeService {
                   builder: (context) => const MemoryGameScreen(),
                 ),
               );
+            },
+          );
+          break;
+        case ContentType.duel:
+          _showGameContent(
+            title: '⚔️ 1v1 Düello',
+            description: 'Rakibinle yarış ve şampiyon ol!',
+            icon: Icons.sports_esports,
+            color: Colors.orange,
+            onAction: () {
+              Navigator.of(_context).pop();
+              showDuelSelectionSheet(_context);
             },
           );
           break;

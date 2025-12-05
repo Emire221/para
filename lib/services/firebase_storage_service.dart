@@ -254,10 +254,14 @@ class FirebaseStorageService {
           await Directory(outPath).create(recursive: true);
         }
       }
-      if (kDebugMode) debugPrint('ArÅŸiv aÃ§ma iÅŸlemi: $archivePath (${data.length} bytes)');
+      if (kDebugMode) {
+        debugPrint('ArÅŸiv aÃ§ma iÅŸlemi: $archivePath (${data.length} bytes)');
+      }
       onProgress('ArÅŸiv iÅŸlendi: $archivePath');
     } catch (e) {
-      if (kDebugMode) debugPrint('ArÅŸiv indirme/aÃ§ma hatasÄ± ($archivePath): $e');
+      if (kDebugMode) {
+        debugPrint('ArÅŸiv indirme/aÃ§ma hatasÄ± ($archivePath): $e');
+      }
       rethrow;
     }
   }
@@ -349,7 +353,9 @@ class FirebaseStorageService {
               }
               await _dbHelper.insertFillBlanksLevel(levelData);
               processedLevels++;
-              if (kDebugMode) debugPrint('Fill Blanks Level iÅŸlendi: $fileName');
+              if (kDebugMode) {
+                debugPrint('Fill Blanks Level iÅŸlendi: $fileName');
+              }
             }
             // Haftalık Sınav dosyası mı kontrol et (weeklyExamId alanı var mı?)
             else if (jsonData is Map<String, dynamic> &&
@@ -385,12 +391,16 @@ class FirebaseStorageService {
               };
               await _dbHelper.insertGuessLevel(guessData);
               processedGuessLevels++;
-              if (kDebugMode) debugPrint('Salla BakalÄ±m Level iÅŸlendi: $fileName');
+              if (kDebugMode) {
+                debugPrint('Salla BakalÄ±m Level iÅŸlendi: $fileName');
+              }
             }
             // Ne test ne bilgi kartÄ± ne de oyun dosyasÄ± deÄŸilse
             else {
               skippedFiles++;
-              if (kDebugMode) debugPrint('Bilinmeyen dosya formatÄ± atlandÄ±: $fileName');
+              if (kDebugMode) {
+                debugPrint('Bilinmeyen dosya formatÄ± atlandÄ±: $fileName');
+              }
             }
           } catch (e) {
             skippedFiles++;
@@ -449,7 +459,9 @@ class FirebaseStorageService {
 
       onProgress('JSON kaydedildi: $jsonPath');
     } catch (e) {
-      if (kDebugMode) debugPrint('JSON indirme/iÅŸleme hatasÄ± ($jsonPath): $e');
+      if (kDebugMode) {
+        debugPrint('JSON indirme/iÅŸleme hatasÄ± ($jsonPath): $e');
+      }
       rethrow;
     }
   }
@@ -467,12 +479,16 @@ class FirebaseStorageService {
 
       // 3. Dosya var mÄ± kontrol et (cache)
       if (await file.exists()) {
-        if (kDebugMode) debugPrint('Oyun iÃ§eriÄŸi cache\'ten okunuyor: $safeFileName');
+        if (kDebugMode) {
+          debugPrint('Oyun iÃ§eriÄŸi cache\'ten okunuyor: $safeFileName');
+        }
         return await file.readAsString();
       }
 
       // 4. Yoksa Firebase'den indir
-      if (kDebugMode) debugPrint('Firebase\'den oyun iÃ§eriÄŸi indiriliyor: $path');
+      if (kDebugMode) {
+        debugPrint('Firebase\'den oyun iÃ§eriÄŸi indiriliyor: $path');
+      }
       final ref = _storage.ref().child(path);
       final data = await ref.getData();
 
@@ -484,7 +500,9 @@ class FirebaseStorageService {
 
       // 5. Yerel hafÄ±zaya kaydet (cache)
       await file.writeAsString(jsonString);
-      if (kDebugMode) debugPrint('Oyun iÃ§eriÄŸi cache\'e kaydedildi: $safeFileName');
+      if (kDebugMode) {
+        debugPrint('Oyun iÃ§eriÄŸi cache\'e kaydedildi: $safeFileName');
+      }
 
       return jsonString;
     } catch (e) {

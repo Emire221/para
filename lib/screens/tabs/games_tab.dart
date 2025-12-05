@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
 import '../../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../../features/games/memory/presentation/screens/memory_game_screen.dart';
+import '../../features/duel/presentation/screens/duel_selection_screen.dart';
+import '../../features/duel/presentation/widgets/duel_game_card.dart';
 
 /// Oyunlar tab'ı
 class GamesTab extends StatelessWidget {
@@ -23,6 +25,13 @@ class GamesTab extends StatelessWidget {
           style: TextStyle(fontSize: 16, color: Colors.grey),
         ),
         const SizedBox(height: 24),
+        
+        // 1v1 Düello kartı (en üstte, öne çıkarılmış)
+        DuelGameCard(
+          onTap: () => showDuelSelectionSheet(context),
+        ),
+        const SizedBox(height: 16),
+        
         _buildGameCard(
           context,
           title: 'Cümle Tamamlama',
