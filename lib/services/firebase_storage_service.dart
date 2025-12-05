@@ -306,7 +306,6 @@ class FirebaseStorageService {
       int processedTests = 0;
       int processedFlashcards = 0;
       int processedLevels = 0;
-      int processedArenaSets = 0;
       int processedWeeklyExams = 0;
       int processedGuessLevels = 0;
       int skippedFiles = 0;
@@ -352,19 +351,7 @@ class FirebaseStorageService {
               processedLevels++;
               if (kDebugMode) debugPrint('Fill Blanks Level iÅŸlendi: $fileName');
             }
-            // Arena Set dosyasÄ± mÄ± kontrol et (arenaSetID alanÄ± var mÄ±?)
-            else if (jsonData is Map<String, dynamic> &&
-                jsonData.containsKey('arenaSetID')) {
-              // questions field'Ä±nÄ± JSON string olarak kaydet
-              final arenaData = Map<String, dynamic>.from(jsonData);
-              if (arenaData.containsKey('questions')) {
-                arenaData['questions'] = json.encode(arenaData['questions']);
-              }
-              await _dbHelper.insertArenaSet(arenaData);
-              processedArenaSets++;
-              if (kDebugMode) debugPrint('Arena Set iÅŸlendi: $fileName');
-            }
-            // HaftalÄ±k SÄ±nav dosyasÄ± mÄ± kontrol et (weeklyExamId alanÄ± var mÄ±?)
+            // Haftalık Sınav dosyası mı kontrol et (weeklyExamId alanı var mı?)
             else if (jsonData is Map<String, dynamic> &&
                 jsonData.containsKey('weeklyExamId')) {
               // questions field'Ä±nÄ± JSON string olarak kaydet
@@ -413,14 +400,14 @@ class FirebaseStorageService {
       }
 
       debugPrint(
-        'Ä°ÅŸlem Ã¶zeti: $processedTests test, $processedFlashcards bilgi kartÄ±, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalÄ±k sÄ±nav, '
-        '$processedGuessLevels salla bakalÄ±m, $skippedFiles atlanan dosya',
+        'İşlem özeti: $processedTests test, $processedFlashcards bilgi kartı, '
+        '$processedLevels level, $processedWeeklyExams haftalık sınav, '
+        '$processedGuessLevels salla bakalım, $skippedFiles atlanan dosya',
       );
       onProgress(
-        'Ä°Ã§erik veritabanÄ±na kaydedildi ($processedTests test, $processedFlashcards bilgi kartÄ±, '
-        '$processedLevels level, $processedArenaSets arena set, $processedWeeklyExams haftalÄ±k sÄ±nav, '
-        '$processedGuessLevels salla bakalÄ±m)',
+        'İçerik veritabanına kaydedildi ($processedTests test, $processedFlashcards bilgi kartı, '
+        '$processedLevels level, $processedWeeklyExams haftalık sınav, '
+        '$processedGuessLevels salla bakalım)',
       );
     } catch (e) {
       if (kDebugMode) debugPrint('Yerel iÃ§erik iÅŸleme hatasÄ±: $e');

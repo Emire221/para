@@ -7,7 +7,6 @@ abstract class IDatabaseHelper {
   Future<void> insertTest(Map<String, dynamic> row);
   Future<void> insertFlashcardSet(Map<String, dynamic> row);
   Future<void> insertFillBlanksLevel(Map<String, dynamic> row);
-  Future<void> insertArenaSet(Map<String, dynamic> row);
   Future<void> insertWeeklyExam(Map<String, dynamic> row);
   Future<void> insertGuessLevel(Map<String, dynamic> row);
   Future<Map<String, dynamic>?> getLatestWeeklyExam();
@@ -171,18 +170,6 @@ class DatabaseHelper implements IDatabaseHelper {
       )
     ''');
 
-    // Arena Sets Tablosu
-    await db.execute('''
-      CREATE TABLE ArenaSets(
-        arenaSetID TEXT PRIMARY KEY,
-        title TEXT,
-        description TEXT,
-        difficulty INTEGER,
-        category TEXT,
-        questions TEXT
-      )
-    ''');
-
     // Game Results Tablosu (Tüm oyun sonuçları için)
     await db.execute('''
       CREATE TABLE GameResults(
@@ -324,18 +311,6 @@ class DatabaseHelper implements IDatabaseHelper {
       await db.execute('''
         CREATE TABLE IF NOT EXISTS FillBlanksLevels(
           levelID TEXT PRIMARY KEY,
-          title TEXT,
-          description TEXT,
-          difficulty INTEGER,
-          category TEXT,
-          questions TEXT
-        )
-      ''');
-
-      // Arena Sets Tablosu
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS ArenaSets(
-          arenaSetID TEXT PRIMARY KEY,
           title TEXT,
           description TEXT,
           difficulty INTEGER,
@@ -627,22 +602,6 @@ class DatabaseHelper implements IDatabaseHelper {
     return await db.query('FillBlanksLevels', orderBy: 'difficulty ASC');
   }
 
-  // Arena Sets Metotları
-  @override
-  Future<void> insertArenaSet(Map<String, dynamic> row) async {
-    Database db = await database;
-    await db.insert(
-      'ArenaSets',
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getArenaSets() async {
-    Database db = await database;
-    return await db.query('ArenaSets', orderBy: 'difficulty ASC');
-  }
-
   // Game Results Metotları
   Future<void> saveGameResult({
     required String gameType,
@@ -774,16 +733,6 @@ class DatabaseHelper implements IDatabaseHelper {
     return results.isNotEmpty ? results.first : null;
   }
 
-  /// Rastgele Arena set çeker
-  /// Tüm veriyi belleğe almak yerine SQL RANDOM() kullanır
-  Future<Map<String, dynamic>?> getRandomArenaSet() async {
-    Database db = await database;
-    final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM ArenaSets ORDER BY RANDOM() LIMIT 1',
-    );
-    return results.isNotEmpty ? results.first : null;
-  }
-
   /// Belirlenen zorluk seviyesinden rastgele Fill Blanks level çeker
   /// @param difficulty: 1-3 arası zorluk seviyesi
   Future<Map<String, dynamic>?> getRandomFillBlanksByDifficulty(
@@ -792,19 +741,6 @@ class DatabaseHelper implements IDatabaseHelper {
     Database db = await database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
       'SELECT * FROM FillBlanksLevels WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
-      [difficulty],
-    );
-    return results.isNotEmpty ? results.first : null;
-  }
-
-  /// Belirlenen zorluk seviyesinden rastgele Arena set çeker
-  /// @param difficulty: 1-3 arası zorluk seviyesi
-  Future<Map<String, dynamic>?> getRandomArenaByDifficulty(
-    int difficulty,
-  ) async {
-    Database db = await database;
-    final List<Map<String, dynamic>> results = await db.rawQuery(
-      'SELECT * FROM ArenaSets WHERE difficulty = ? ORDER BY RANDOM() LIMIT 1',
       [difficulty],
     );
     return results.isNotEmpty ? results.first : null;

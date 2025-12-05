@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
-import '../../features/games/arena/presentation/screens/opponent_search_screen.dart';
 import '../../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../../features/games/memory/presentation/screens/memory_game_screen.dart';
 
@@ -37,24 +36,6 @@ class GamesTab extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => const LevelSelectionScreen(),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-        _buildGameCard(
-          context,
-          title: 'Arena Düello',
-          description: 'Botlarla yarış!',
-          icon: Icons.sports_esports,
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade400, Colors.blue.shade700],
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const OpponentSearchScreen(),
               ),
             );
           },

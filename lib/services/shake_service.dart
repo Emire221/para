@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../services/database_helper.dart';
 import '../features/games/fill_blanks/presentation/screens/level_selection_screen.dart';
-import '../features/games/arena/presentation/screens/opponent_search_screen.dart';
 import '../features/games/guess/presentation/screens/guess_level_selection_screen.dart';
 import '../features/games/memory/presentation/screens/memory_game_screen.dart';
 
@@ -15,7 +14,6 @@ enum ContentType {
   test,
   flashcard,
   fillBlanks,
-  arena,
   sallabakalim,
   bulbakalim,
 }
@@ -211,23 +209,6 @@ class ShakeService {
                 _context,
                 MaterialPageRoute(
                   builder: (context) => const LevelSelectionScreen(),
-                ),
-              );
-            },
-          );
-          break;
-        case ContentType.arena:
-          _showGameContent(
-            title: '⚔️ Arena Düello',
-            description: 'Botlarla yarış ve şampiyon ol!',
-            icon: Icons.sports_esports,
-            color: Colors.blue,
-            onAction: () {
-              Navigator.of(_context).pop();
-              Navigator.push(
-                _context,
-                MaterialPageRoute(
-                  builder: (context) => const OpponentSearchScreen(),
                 ),
               );
             },
