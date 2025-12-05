@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/glass_container.dart';
 import 'register_screen.dart';
+import 'main_screen.dart';
+import 'profile_setup_screen.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -14,6 +17,44 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isCheckingAuth = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthState();
+  }
+
+  Future<void> _checkAuthState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Kullanıcı zaten giriş yapmış, profil kontrolü yap
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (!mounted) return;
+
+        if (doc.exists) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
+          );
+        }
+        return;
+      } catch (e) {
+        // Hata durumunda login ekranında kal
+      }
+    }
+    if (mounted) {
+      setState(() => _isCheckingAuth = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -24,6 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingAuth) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
