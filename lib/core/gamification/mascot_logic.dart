@@ -2,52 +2,30 @@ import '../../features/mascot/domain/entities/mascot.dart';
 
 /// Maskot oyunlaştırma mantığı
 class MascotLogic {
-  // Seviye XP eşikleri
-  static const Map<int, int> xpThresholds = {
-    1: 0,
-    2: 500,
-    3: 1500,
-    4: 3000,
-    5: 5000,
-    6: 7500,
-    7: 10500,
-    8: 14000,
-    9: 18000,
-    10: 22500,
-  };
+  // Her 100 XP'de 1 level atlama
+  static const int xpPerLevel = 100;
 
-  /// XP'ye göre seviye hesapla
+  /// XP'ye göre seviye hesapla (her 100 XP = 1 level)
   static int calculateLevel(int xp) {
-    int level = 1;
-    for (var entry in xpThresholds.entries) {
-      if (xp >= entry.value) {
-        level = entry.key;
-      } else {
-        break;
-      }
-    }
-    return level;
+    // 0-99 XP = Level 1, 100-199 XP = Level 2, vs.
+    return (xp ~/ xpPerLevel) + 1;
   }
 
   /// Bir sonraki seviyeye kalan XP
   static int xpToNextLevel(int currentXp, int currentLevel) {
-    if (currentLevel >= 10) return 0;
-
-    final nextLevelXp = xpThresholds[currentLevel + 1] ?? 0;
+    final nextLevelXp = currentLevel * xpPerLevel;
     return nextLevelXp - currentXp;
   }
 
   /// Mevcut seviyenin başlangıç XP'si
   static int currentLevelStartXp(int level) {
-    return xpThresholds[level] ?? 0;
+    return (level - 1) * xpPerLevel;
   }
 
   /// Seviye ilerleme yüzdesi (0-1 arası)
   static double getLevelProgress(int currentXp, int currentLevel) {
-    if (currentLevel >= 10) return 1.0;
-
     final currentLevelStart = currentLevelStartXp(currentLevel);
-    final nextLevelStart = xpThresholds[currentLevel + 1] ?? currentLevelStart;
+    final nextLevelStart = currentLevel * xpPerLevel;
     final levelRange = nextLevelStart - currentLevelStart;
 
     if (levelRange == 0) return 1.0;

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:ui';
 import '../main.dart'; // themeManager'a erişim için
-import '../util/app_colors.dart';
 import '../core/providers/user_provider.dart';
 import '../services/shake_service.dart';
 import 'tabs/home_tab.dart';
@@ -11,7 +13,7 @@ import 'tabs/games_tab.dart';
 import 'tabs/profile_tab.dart';
 import 'notifications_screen.dart';
 
-/// Uygulamanın ana iskeleti - BottomNavigationBar ile 4 tab yönetimi
+/// Uygulamanın ana iskeleti - Floating Glass Dock ile 4 tab yönetimi
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
@@ -19,16 +21,60 @@ class MainScreen extends ConsumerStatefulWidget {
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen>
+    with TickerProviderStateMixin {
   int _currentIndex = 0;
   ShakeService? _shakeService;
+
+  // Animasyon controller'ları
+  late AnimationController _glowController;
+  late AnimationController _bounceController;
 
   // Tab'ları geç başlat (callback ile)
   late final List<Widget> _tabs;
 
+  // Navigation items
+  final List<_NavItem> _navItems = [
+    _NavItem(
+      icon: FontAwesomeIcons.house,
+      activeIcon: FontAwesomeIcons.houseMedical,
+      label: 'Ana Sayfa',
+      gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
+    ),
+    _NavItem(
+      icon: FontAwesomeIcons.bookOpen,
+      activeIcon: FontAwesomeIcons.bookBookmark,
+      label: 'Dersler',
+      gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+    ),
+    _NavItem(
+      icon: FontAwesomeIcons.gamepad,
+      activeIcon: FontAwesomeIcons.chess,
+      label: 'Oyunlar',
+      gradient: const [Color(0xFFF093FB), Color(0xFFF5576C)],
+    ),
+    _NavItem(
+      icon: FontAwesomeIcons.userAstronaut,
+      activeIcon: FontAwesomeIcons.userNinja,
+      label: 'Profil',
+      gradient: const [Color(0xFFFF9A9E), Color(0xFFFECFEF)],
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
+
+    // Animasyon controller'ları
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+
+    _bounceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
 
     // Tab'ları callback ile oluştur
     _tabs = [
@@ -48,6 +94,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   /// Belirtilen tab'a geçiş yapar
   void _navigateToTab(int index) {
     if (index >= 0 && index < _tabs.length) {
+      HapticFeedback.lightImpact();
+      _bounceController.forward(from: 0);
       setState(() {
         _currentIndex = index;
       });
@@ -57,6 +105,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void dispose() {
     _shakeService?.dispose();
+    _glowController.dispose();
+    _bounceController.dispose();
     super.dispose();
   }
 
@@ -80,11 +130,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         return PopScope(
           canPop: false, // Geri butonunu devre dışı bırak
           child: Scaffold(
+            extendBody: true, // İçerik navigasyon barın arkasına uzansın
+            extendBodyBehindAppBar: true,
             appBar: _currentIndex == 0
                 ? _buildAppBar(context, isDarkMode)
                 : null,
             body: IndexedStack(index: _currentIndex, children: _tabs),
-            bottomNavigationBar: _buildBottomNavigationBar(isDarkMode),
+            bottomNavigationBar: _buildFloatingGlassDock(isDarkMode),
           ),
         );
       },
@@ -97,14 +149,33 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
+      toolbarHeight: 70,
       flexibleSpace: ClipRRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
             decoration: BoxDecoration(
-              color: isDarkMode
-                  ? Colors.grey[900]!.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDarkMode
+                    ? [
+                        const Color(0xFF1a1a2e).withValues(alpha: 0.9),
+                        const Color(0xFF16213e).withValues(alpha: 0.9),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.85),
+                        const Color(0xFFE8F5E9).withValues(alpha: 0.85),
+                      ],
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: isDarkMode
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
             ),
           ),
         ),
@@ -121,28 +192,79 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
           return Row(
             children: [
-              CircleAvatar(radius: 20, backgroundImage: avatarImage),
+              // Avatar with gradient border
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF667EEA).withValues(alpha: 0.4),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(radius: 20, backgroundImage: avatarImage),
+              ),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: isDarkMode ? Colors.white : Colors.black87,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  Text(
-                    '$grade Kaptanı',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDarkMode
+                              ? [
+                                  const Color(
+                                    0xFF11998E,
+                                  ).withValues(alpha: 0.3),
+                                  const Color(
+                                    0xFF38EF7D,
+                                  ).withValues(alpha: 0.3),
+                                ]
+                              : [
+                                  const Color(
+                                    0xFF11998E,
+                                  ).withValues(alpha: 0.2),
+                                  const Color(
+                                    0xFF38EF7D,
+                                  ).withValues(alpha: 0.2),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$grade 🎓',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: isDarkMode
+                              ? const Color(0xFF38EF7D)
+                              : const Color(0xFF11998E),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           );
@@ -151,77 +273,59 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         error: (_, __) => const SizedBox.shrink(),
       ),
       actions: [
+        // Theme Toggle - Modern pill design
         _buildThemeToggleButton(context, isDarkMode),
         const SizedBox(width: 8),
-        PopupMenuButton<void>(
-          offset: const Offset(0, 50),
-          color: isDarkMode ? Colors.grey[850] : Colors.white,
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          icon: Stack(
-            alignment: Alignment.topRight,
-            children: [
-              Icon(
-                Icons.notifications,
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                size: 28,
-              ),
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isDarkMode
-                        ? AppColors.backgroundDark
-                        : AppColors.backgroundLight,
-                    width: 1.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              enabled: false,
-              padding: EdgeInsets.zero,
-              child: NotificationsList(),
-            ),
-          ],
-        ),
-        const SizedBox(width: 8),
+        // Notifications - Modern badge
+        _buildNotificationButton(context, isDarkMode),
+        const SizedBox(width: 12),
       ],
     );
   }
 
   Widget _buildThemeToggleButton(BuildContext context, bool isDarkMode) {
     return Container(
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.grey[700]!.withValues(alpha: 0.5)
-            : Colors.grey[200]!.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: isDarkMode
+              ? [
+                  Colors.grey[800]!.withValues(alpha: 0.6),
+                  Colors.grey[700]!.withValues(alpha: 0.6),
+                ]
+              : [
+                  Colors.grey[200]!.withValues(alpha: 0.8),
+                  Colors.grey[100]!.withValues(alpha: 0.8),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDarkMode
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _themeButton(
             context,
-            Icons.light_mode,
+            FontAwesomeIcons.sun,
             !isDarkMode,
             () => themeManager.toggleTheme(false),
+            const Color(0xFFFFB347),
           ),
           _themeButton(
             context,
-            Icons.dark_mode,
+            FontAwesomeIcons.moon,
             isDarkMode,
             () => themeManager.toggleTheme(true),
+            const Color(0xFF667EEA),
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.2, end: 0);
   }
 
   Widget _themeButton(
@@ -229,88 +333,491 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     IconData icon,
     bool isSelected,
     VoidCallback onPressed,
+    Color activeColor,
   ) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.all(6),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onPressed();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDarkMode ? Colors.grey[800] : Colors.white)
-              : Colors.transparent,
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    activeColor.withValues(alpha: 0.3),
+                    activeColor.withValues(alpha: 0.1),
+                  ],
+                )
+              : null,
           shape: BoxShape.circle,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        child: Icon(
+        child: FaIcon(
           icon,
-          size: 16,
+          size: 14,
           color: isSelected
-              ? (isDarkMode ? Colors.yellow[400] : Colors.yellow[700])
-              : (isDarkMode ? Colors.grey[400] : Colors.grey[500]),
+              ? activeColor
+              : (Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[500]
+                    : Colors.grey[400]),
         ),
       ),
     );
   }
 
-  Widget _buildBottomNavigationBar(bool isDarkMode) {
+  Widget _buildNotificationButton(BuildContext context, bool isDarkMode) {
+    return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (context) => _buildNotificationSheet(isDarkMode),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isDarkMode
+                    ? [
+                        const Color(0xFFF093FB).withValues(alpha: 0.2),
+                        const Color(0xFFF5576C).withValues(alpha: 0.2),
+                      ]
+                    : [
+                        const Color(0xFFF093FB).withValues(alpha: 0.15),
+                        const Color(0xFFF5576C).withValues(alpha: 0.15),
+                      ],
+              ),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFFF093FB).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                FaIcon(
+                  FontAwesomeIcons.bell,
+                  color: isDarkMode ? Colors.white70 : const Color(0xFFF5576C),
+                  size: 18,
+                ),
+                // Notification badge
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isDarkMode
+                            ? const Color(0xFF1a1a2e)
+                            : Colors.white,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B6B).withValues(alpha: 0.5),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: 100.ms)
+        .slideX(begin: 0.2, end: 0);
+  }
+
+  Widget _buildNotificationSheet(bool isDarkMode) {
     return Container(
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [const Color(0xFF1a1a2e), const Color(0xFF16213e)]
+              : [Colors.white, const Color(0xFFF5F5F5)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDarkMode
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: isDarkMode
-                ? Colors.grey[900]!.withValues(alpha: 0.9)
-                : Colors.white.withValues(alpha: 0.9),
-            selectedItemColor: isDarkMode
-                ? AppColors.card1Dark
-                : AppColors.card1Light,
-            unselectedItemColor: isDarkMode
-                ? Colors.grey[400]
-                : Colors.grey[600],
-            selectedFontSize: 12,
-            unselectedFontSize: 12,
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Ana Sayfa',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFF093FB), Color(0xFFF5576C)],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const FaIcon(
+                    FontAwesomeIcons.bell,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Bildirimler',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Notifications List
+          const SizedBox(height: 300, child: NotificationsList()),
+        ],
+      ),
+    );
+  }
+
+  /// Floating Glass Dock - Ana navigasyon barı
+  Widget _buildFloatingGlassDock(bool isDarkMode) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isTablet = screenWidth > 600;
+    final isSmallScreen = screenHeight < 700;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // Tablet için maksimum genişlik 400px
+    final dockWidth = isTablet ? 400.0 : screenWidth - 40;
+    // Küçük ekranlar için daha kısa yükseklik
+    final dockHeight = isSmallScreen ? 60.0 : 70.0;
+
+    return Container(
+          margin: EdgeInsets.only(
+            left: isTablet ? (screenWidth - dockWidth) / 2 : 20,
+            right: isTablet ? (screenWidth - dockWidth) / 2 : 20,
+            bottom: (isSmallScreen ? 12 : 20) + bottomPadding,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(isSmallScreen ? 24 : 28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: AnimatedBuilder(
+                animation: _glowController,
+                builder: (context, child) {
+                  return Container(
+                    height: dockHeight,
+                    decoration: BoxDecoration(
+                      // Glassmorphism arka plan
+                      color: isDarkMode
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(
+                        isSmallScreen ? 24 : 28,
+                      ),
+                      // Gradient border
+                      border: Border.all(
+                        width: 1.5,
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
+                      // Animated gradient border effect
+                      boxShadow: [
+                        // Ana gölge
+                        BoxShadow(
+                          color: isDarkMode
+                              ? Colors.black.withValues(alpha: 0.4)
+                              : Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 8),
+                        ),
+                        // Renkli glow efekti
+                        BoxShadow(
+                          color: _navItems[_currentIndex].gradient[0]
+                              .withValues(
+                                alpha: 0.2 + _glowController.value * 0.15,
+                              ),
+                          blurRadius: 25,
+                          spreadRadius: -5,
+                        ),
+                      ],
+                    ),
+                    child: child,
+                  );
+                },
+                child: _buildNavItemsRow(isDarkMode),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.book_outlined),
-                activeIcon: Icon(Icons.book),
-                label: 'Dersler',
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.5, end: 0, curve: Curves.easeOutBack);
+  }
+
+  /// Navigasyon öğelerinin satırı
+  Widget _buildNavItemsRow(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      // Gradient border overlay
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.1),
+            Colors.transparent,
+            Colors.white.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(_navItems.length, (index) {
+          return _buildNavItem(index, isDarkMode);
+        }),
+      ),
+    );
+  }
+
+  /// Tek bir navigasyon öğesi
+  Widget _buildNavItem(int index, bool isDarkMode) {
+    final item = _navItems[index];
+    final isSelected = _currentIndex == index;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _navigateToTab(index),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // İkon ve glow efekti
+              Flexible(
+                child: _buildAnimatedIcon(
+                  item,
+                  isSelected,
+                  isDarkMode,
+                  isSmallScreen,
+                ),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.games_outlined),
-                activeIcon: Icon(Icons.games),
-                label: 'Oyunlar',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profil',
-              ),
+              SizedBox(height: isSmallScreen ? 2 : 4),
+              // Label
+              _buildLabel(item.label, isSelected, isDarkMode, isSmallScreen),
             ],
           ),
         ),
       ),
     );
   }
+
+  /// Animasyonlu ikon widget'ı
+  Widget _buildAnimatedIcon(
+    _NavItem item,
+    bool isSelected,
+    bool isDarkMode,
+    bool isSmallScreen,
+  ) {
+    // Responsive boyutlar
+    final activeSize = isSmallScreen ? 36.0 : 44.0;
+    final inactiveSize = isSmallScreen ? 30.0 : 36.0;
+    final glowBaseSize = isSmallScreen ? 34.0 : 42.0;
+    final iconActiveSize = isSmallScreen ? 16.0 : 20.0;
+    final iconInactiveSize = isSmallScreen ? 14.0 : 17.0;
+
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Glow efekti (sadece aktif için)
+            if (isSelected)
+              Container(
+                width: glowBaseSize + _glowController.value * 8,
+                height: glowBaseSize + _glowController.value * 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      item.gradient[0].withValues(alpha: 0.4),
+                      item.gradient[1].withValues(alpha: 0.1),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            // İkon container
+            AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  width: isSelected ? activeSize : inactiveSize,
+                  height: isSelected ? activeSize : inactiveSize,
+                  transform: Matrix4.identity()
+                    ..setTranslationRaw(
+                      0.0,
+                      isSelected ? (isSmallScreen ? -2.0 : -4.0) : 0.0,
+                      0.0,
+                    ),
+                  transformAlignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: isSelected
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: item.gradient,
+                          )
+                        : null,
+                    color: isSelected
+                        ? null
+                        : (isDarkMode
+                              ? Colors.grey[800]!.withValues(alpha: 0.5)
+                              : Colors.grey[200]!.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected
+                            ? item.gradient[0].withValues(alpha: 0.4)
+                            : Colors.transparent,
+                        blurRadius: isSelected
+                            ? (isSmallScreen ? 8.0 : 12.0)
+                            : 0.01,
+                        spreadRadius: isSelected
+                            ? (isSmallScreen ? 1.0 : 2.0)
+                            : 0.0,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: ShaderMask(
+                      shaderCallback: (bounds) {
+                        if (isSelected) {
+                          return const LinearGradient(
+                            colors: [Colors.white, Colors.white],
+                          ).createShader(bounds);
+                        }
+                        return LinearGradient(
+                          colors: isDarkMode
+                              ? [Colors.grey[400]!, Colors.grey[500]!]
+                              : [Colors.grey[600]!, Colors.grey[700]!],
+                        ).createShader(bounds);
+                      },
+                      child: FaIcon(
+                        isSelected ? item.activeIcon : item.icon,
+                        size: isSelected ? iconActiveSize : iconInactiveSize,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+                .animate(target: isSelected ? 1 : 0)
+                .scale(
+                  begin: const Offset(0.9, 0.9),
+                  end: const Offset(1.0, 1.0),
+                  duration: 200.ms,
+                  curve: Curves.easeOutBack,
+                )
+                .moveY(
+                  begin: 0,
+                  end: -2,
+                  duration: 200.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Label widget'ı
+  Widget _buildLabel(
+    String label,
+    bool isSelected,
+    bool isDarkMode,
+    bool isSmallScreen,
+  ) {
+    return AnimatedDefaultTextStyle(
+      duration: const Duration(milliseconds: 200),
+      style: TextStyle(
+        fontSize: isSmallScreen ? (isSelected ? 9 : 8) : (isSelected ? 11 : 10),
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+        color: isSelected
+            ? (isDarkMode ? Colors.white : Colors.black87)
+            : (isDarkMode ? Colors.grey[500] : Colors.grey[600]),
+        letterSpacing: isSelected ? 0.3 : 0,
+      ),
+      child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    );
+  }
+}
+
+/// Navigasyon öğesi veri modeli
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final List<Color> gradient;
+
+  const _NavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.gradient,
+  });
 }

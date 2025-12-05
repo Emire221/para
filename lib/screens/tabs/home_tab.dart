@@ -1,387 +1,836 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:ui';
-import '../../util/app_colors.dart';
-import '../../features/mascot/presentation/widgets/interactive_mascot_widget.dart';
-import '../../widgets/daily_fact_widget.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:math' as math;
+import '../../widgets/glass_container.dart';
+import '../../services/daily_fact_service.dart';
 import '../../core/providers/user_provider.dart';
+import '../../features/mascot/presentation/providers/mascot_provider.dart';
+import '../../features/mascot/presentation/widgets/interactive_mascot_widget.dart';
+import '../../features/mascot/domain/entities/mascot.dart';
 import '../lesson_selection_screen.dart';
 import '../achievements_screen.dart';
 
-/// Ana sayfa tab'ı - Tam ekran interaktif maskot ile Talking Tom benzeri deneyim
-class HomeTab extends ConsumerWidget {
-  /// Tab değiştirme callback'i (0: Ana Sayfa, 1: Dersler, 2: Oyunlar, 3: Profil)
+/// Ana sayfa tab'ı - "Maskotun Evi" konseptinde immersive deneyim
+class HomeTab extends ConsumerStatefulWidget {
   final void Function(int tabIndex)? onNavigateToTab;
 
   const HomeTab({super.key, this.onNavigateToTab});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends ConsumerState<HomeTab>
+    with TickerProviderStateMixin {
+  // Animasyon controller'ları
+  late AnimationController _floatController;
+  late AnimationController _bubbleController;
+
+  // Günlük bilgi state'i
+  String _typedText = '';
+  bool _isTyping = false;
+  DailyFact? _dailyFact;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Floating animasyon (bulutlar için)
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
+    // Bubble animasyon
+    _bubbleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    // Günlük bilgiyi yükle ve typing animasyonu başlat
+    _loadDailyFact();
+  }
+
+  Future<void> _loadDailyFact() async {
+    final fact = await DailyFactService.getTodaysFact();
+    if (fact != null && mounted) {
+      setState(() => _dailyFact = fact);
+      _startTypingAnimation(fact.fact);
+    }
+  }
+
+  void _startTypingAnimation(String text) async {
+    setState(() {
+      _isTyping = true;
+      _typedText = '';
+    });
+
+    for (int i = 0; i < text.length && mounted; i++) {
+      await Future.delayed(const Duration(milliseconds: 30));
+      if (mounted) {
+        setState(() => _typedText = text.substring(0, i + 1));
+      }
+    }
+
+    if (mounted) {
+      setState(() => _isTyping = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _bubbleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
     final userProfileAsync = ref.watch(userProfileProvider);
+    final mascotAsync = ref.watch(activeMascotProvider);
 
     return Stack(
       children: [
-        // Katman 1: Arka plan dekorasyonları
-        _buildBackgroundDecorations(context, isDarkMode),
+        // Katman 1: Animated Background
+        _buildAnimatedBackground(isDarkMode),
 
-        // Katman 2: Gradyan arka plan
-        _buildGradientBackground(context, isDarkMode),
+        // Katman 2: Floating Clouds/Shapes
+        _buildFloatingElements(isDarkMode),
 
-        // Katman 3: Büyük interaktif maskot (ortada)
-        Positioned(
-          top: screenHeight * 0.08,
-          left: 0,
-          right: 0,
-          child: const InteractiveMascotWidget(enableVoiceInteraction: true),
-        ),
-
-        // Katman 4: Kaydırılabilir içerik (DraggableScrollableSheet)
-        DraggableScrollableSheet(
-          initialChildSize: 0.35,
-          minChildSize: 0.25,
-          maxChildSize: 0.85,
-          snap: true,
-          snapSizes: const [0.35, 0.6, 0.85],
-          builder: (context, scrollController) {
-            return _buildContentSheet(
-              context,
-              scrollController,
-              isDarkMode,
-              userProfileAsync,
-            );
-          },
+        // Katman 3: Main Content
+        SafeArea(
+          child: isTablet
+              ? _buildTabletLayout(
+                  isDarkMode,
+                  userProfileAsync,
+                  mascotAsync,
+                  screenSize,
+                )
+              : _buildPhoneLayout(
+                  isDarkMode,
+                  userProfileAsync,
+                  mascotAsync,
+                  screenSize,
+                ),
         ),
       ],
     );
   }
 
-  Widget _buildGradientBackground(BuildContext context, bool isDarkMode) {
+  /// Tablet Layout - Yatay düzen
+  Widget _buildTabletLayout(
+    bool isDarkMode,
+    AsyncValue<Map<String, dynamic>?> userProfileAsync,
+    AsyncValue<Mascot?> mascotAsync,
+    Size screenSize,
+  ) {
+    return Row(
+      children: [
+        // Sol taraf - Maskot Alanı
+        Expanded(
+          flex: 5,
+          child: Column(
+            children: [
+              _buildHeader(isDarkMode, userProfileAsync, mascotAsync),
+              Expanded(
+                child: _buildMascotStage(isDarkMode, mascotAsync, screenSize),
+              ),
+            ],
+          ),
+        ),
+        // Sağ taraf - Kartlar
+        Expanded(
+          flex: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildActionDeck(isDarkMode, isVertical: true),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Phone Layout - Dikey düzen
+  Widget _buildPhoneLayout(
+    bool isDarkMode,
+    AsyncValue<Map<String, dynamic>?> userProfileAsync,
+    AsyncValue<Mascot?> mascotAsync,
+    Size screenSize,
+  ) {
+    final isSmallScreen = screenSize.height < 700;
+    final mascotHeight = isSmallScreen
+        ? screenSize.height * 0.35
+        : screenSize.height * 0.40;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight:
+              screenSize.height -
+              MediaQuery.of(context).padding.top -
+              MediaQuery.of(context).padding.bottom,
+        ),
+        child: Column(
+          children: [
+            // Header
+            _buildHeader(
+              isDarkMode,
+              userProfileAsync,
+              mascotAsync,
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.3, end: 0),
+
+            // Speech Bubble - Header altında
+            if (_dailyFact != null)
+              Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: _buildSpeechBubbleCard(isDarkMode, mascotAsync),
+                  )
+                  .animate()
+                  .fadeIn(duration: 500.ms, delay: 100.ms)
+                  .slideY(begin: -0.2, end: 0),
+
+            // Mascot Stage - Daha büyük
+            SizedBox(
+                  height: mascotHeight,
+                  child: _buildMascotStage(isDarkMode, mascotAsync, screenSize),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms, delay: 200.ms)
+                .scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1)),
+
+            // Action Deck
+            Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    isSmallScreen ? 90 : 110,
+                  ),
+                  child: _buildActionDeck(
+                    isDarkMode,
+                    isVertical: false,
+                    isSmallScreen: isSmallScreen,
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 500.ms, delay: 400.ms)
+                .slideY(begin: 0.3, end: 0),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Animated gradient background
+  Widget _buildAnimatedBackground(bool isDarkMode) {
+    return AnimatedBuilder(
+      animation: _floatController,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDarkMode
+                  ? [
+                      Color.lerp(
+                        const Color(0xFF1a1a2e),
+                        const Color(0xFF16213e),
+                        _floatController.value,
+                      )!,
+                      Color.lerp(
+                        const Color(0xFF16213e),
+                        const Color(0xFF0f3460),
+                        _floatController.value,
+                      )!,
+                      const Color(0xFF0f0f23),
+                    ]
+                  : [
+                      Color.lerp(
+                        const Color(0xFFE8F5E9),
+                        const Color(0xFFE3F2FD),
+                        _floatController.value,
+                      )!,
+                      Color.lerp(
+                        const Color(0xFFB2DFDB),
+                        const Color(0xFFBBDEFB),
+                        _floatController.value,
+                      )!,
+                      const Color(0xFF80CBC4),
+                    ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Floating decorative elements
+  Widget _buildFloatingElements(bool isDarkMode) {
+    return AnimatedBuilder(
+      animation: _floatController,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            // Cloud 1
+            Positioned(
+              top: 60 + _floatController.value * 20,
+              left: 20,
+              child: _buildCloud(isDarkMode, size: 80),
+            ),
+            // Cloud 2
+            Positioned(
+              top: 120 + (1 - _floatController.value) * 15,
+              right: 30,
+              child: _buildCloud(isDarkMode, size: 60),
+            ),
+            // Cloud 3
+            Positioned(
+              top: 200 + _floatController.value * 10,
+              left: 60,
+              child: _buildCloud(isDarkMode, size: 50),
+            ),
+            // Sparkles
+            ..._buildSparkles(isDarkMode),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCloud(bool isDarkMode, {required double size}) {
     return Container(
+      width: size,
+      height: size * 0.6,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+        borderRadius: BorderRadius.circular(size),
+        gradient: RadialGradient(
           colors: isDarkMode
               ? [
-                  const Color(0xFF1a1a2e),
-                  const Color(0xFF16213e),
-                  const Color(0xFF0f0f23),
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.02),
                 ]
               : [
-                  const Color(0xFFE8F5E9),
-                  const Color(0xFFB2DFDB),
-                  const Color(0xFF80CBC4),
+                  Colors.white.withValues(alpha: 0.6),
+                  Colors.white.withValues(alpha: 0.2),
                 ],
         ),
       ),
     );
   }
 
-  Widget _buildContentSheet(
-    BuildContext context,
-    ScrollController scrollController,
+  List<Widget> _buildSparkles(bool isDarkMode) {
+    final random = math.Random(42);
+    return List.generate(8, (index) {
+      return Positioned(
+        top: 100 + random.nextDouble() * 300,
+        left: 30 + random.nextDouble() * 300,
+        child:
+            Icon(
+                  Icons.star,
+                  size: 8 + random.nextDouble() * 8,
+                  color: isDarkMode
+                      ? Colors.yellow.withValues(
+                          alpha: 0.3 + random.nextDouble() * 0.3,
+                        )
+                      : Colors.amber.withValues(
+                          alpha: 0.4 + random.nextDouble() * 0.3,
+                        ),
+                )
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(0.5, 0.5),
+                  end: const Offset(1.2, 1.2),
+                  duration: Duration(milliseconds: 1000 + random.nextInt(1000)),
+                )
+                .fadeIn(duration: 500.ms),
+      );
+    });
+  }
+
+  /// Header with greeting and stats
+  Widget _buildHeader(
     bool isDarkMode,
     AsyncValue<Map<String, dynamic>?> userProfileAsync,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.grey[900]!.withValues(alpha: 0.95)
-            : Colors.white.withValues(alpha: 0.95),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Sürükleme tutacağı
-          _buildDragHandle(isDarkMode),
-
-          // İçerik listesi
-          Expanded(
-            child: ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              children: [
-                _buildWelcomeCard(context, isDarkMode, userProfileAsync),
-                const SizedBox(height: 16),
-                const DailyFactWidget(),
-                const SizedBox(height: 16),
-                _buildQuickActionsGrid(context, isDarkMode),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDragHandle(bool isDarkMode) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      width: 40,
-      height: 4,
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-
-  Widget _buildBackgroundDecorations(BuildContext context, bool isDarkMode) {
-    return Stack(
-      children: [
-        _buildDecoImage(
-          context,
-          'assets/images/icon_compass_1.png',
-          top: 0.08,
-          left: -0.05,
-        ),
-        _buildDecoImage(
-          context,
-          'assets/images/icon_palette.png',
-          top: 0.05,
-          right: -0.03,
-        ),
-        _buildDecoImage(
-          context,
-          'assets/images/icon_ruler.png',
-          top: 0.3,
-          right: -0.05,
-          angle: -12,
-        ),
-        _buildDecoImage(
-          context,
-          'assets/images/icon_book.png',
-          top: 0.5,
-          right: -0.03,
-        ),
-        _buildDecoImage(
-          context,
-          'assets/images/icon_compass_2.png',
-          top: 0.5,
-          left: -0.05,
-        ),
-        _buildDecoImage(
-          context,
-          'assets/images/icon_backpack.png',
-          bottom: 0.1,
-          right: -0.03,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDecoImage(
-    BuildContext context,
-    String path, {
-    double? top,
-    double? bottom,
-    double? left,
-    double? right,
-    double angle = 0,
-  }) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    return Positioned(
-      top: top != null ? screenHeight * top : null,
-      bottom: bottom != null ? screenHeight * bottom : null,
-      left: left != null ? screenWidth * left : null,
-      right: right != null ? screenWidth * right : null,
-      child: Transform.rotate(
-        angle: angle * 3.14159 / 180,
-        child: Image.asset(
-          path,
-          width: 64,
-          height: 64,
-          color: (isDarkMode ? Colors.white : Colors.black).withValues(
-            alpha: 0.08,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWelcomeCard(
-    BuildContext context,
-    bool isDarkMode,
-    AsyncValue<Map<String, dynamic>?> userProfileAsync,
+    AsyncValue<Mascot?> mascotAsync,
   ) {
     final userName = userProfileAsync.asData?.value?['name'] ?? 'Bilgi Avcısı';
+    final mascot = mascotAsync.asData?.value;
+    final level = mascot?.level ?? 1;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? Colors.grey[800]!.withValues(alpha: 0.4)
-                : Colors.white.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isDarkMode
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.grey.withValues(alpha: 0.2),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          // Sol - Kullanıcı adı
+          Flexible(
+            child: Text(
+              'Merhaba, $userName! 👋',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(width: 8),
+          // Sağ - Streak ve Level (kompakt)
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Hoş Geldin, $userName! 🎯',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? AppColors.textDark : AppColors.textLight,
+              // Streak Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FaIcon(
+                      FontAwesomeIcons.fire,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '5',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Maskotuna basılı tut ve konuş - seni taklit etsin!',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDarkMode
-                      ? AppColors.textSecondaryDark
-                      : AppColors.textSecondaryLight,
+              const SizedBox(width: 6),
+              // Level Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      mascot?.petType.color ?? Colors.purple,
+                      (mascot?.petType.color ?? Colors.purple).withValues(
+                        alpha: 0.7,
+                      ),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const FaIcon(
+                      FontAwesomeIcons.star,
+                      color: Colors.white,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Lv.$level',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildQuickActionsGrid(BuildContext context, bool isDarkMode) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
+  /// Speech Bubble Card - Header altında gösterilecek
+  Widget _buildSpeechBubbleCard(
+    bool isDarkMode,
+    AsyncValue<Mascot?> mascotAsync,
+  ) {
+    final mascot = mascotAsync.asData?.value;
+
+    return GlassContainer(
+      blur: 10,
+      opacity: isDarkMode ? 0.15 : 0.6,
+      borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          // Icon
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.lightbulb, size: 20, color: Colors.amber[600]),
+          ),
+          const SizedBox(width: 12),
+          // Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Bunu biliyor musun? 💡',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _typedText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.3,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (_isTyping)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(
+                    mascot?.petType.color ?? Colors.purple,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Mascot Stage - İnteraktif maskot alanı (Talking Tom benzeri)
+  Widget _buildMascotStage(
+    bool isDarkMode,
+    AsyncValue<Mascot?> mascotAsync,
+    Size screenSize,
+  ) {
+    final isSmallScreen = screenSize.height < 700;
+    final mascotHeight = isSmallScreen
+        ? screenSize.height * 0.32
+        : screenSize.height * 0.38;
+
+    return mascotAsync.when(
+      data: (mascot) {
+        if (mascot == null) {
+          return _buildNoMascotState(isDarkMode);
+        }
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // InteractiveMascotWidget - Basılı tutup konuşma özelliği
+            InteractiveMascotWidget(
+              height: mascotHeight,
+              enableVoiceInteraction: true,
+            ),
+            // Mascot name badge
+            Positioned(
+              bottom: 0,
+              child: _buildMascotNameBadge(isDarkMode, mascot),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _buildNoMascotState(isDarkMode),
+    );
+  }
+
+  Widget _buildNoMascotState(bool isDarkMode) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.pets,
+            size: 80,
+            color: isDarkMode ? Colors.white30 : Colors.black26,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Henüz bir maskotun yok!',
+            style: TextStyle(
+              fontSize: 16,
+              color: isDarkMode ? Colors.white54 : Colors.black45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMascotNameBadge(bool isDarkMode, Mascot mascot) {
+    return GlassContainer(
+      blur: 8,
+      opacity: isDarkMode ? 0.2 : 0.5,
+      borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: mascot.petType.color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            mascot.petName,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(width: 8),
+          FaIcon(FontAwesomeIcons.heart, size: 12, color: Colors.red[400]),
+        ],
+      ),
+    ).animate().fadeIn(duration: 500.ms, delay: 600.ms);
+  }
+
+  /// Action Deck - Hızlı işlem kartları
+  Widget _buildActionDeck(
+    bool isDarkMode, {
+    required bool isVertical,
+    bool isSmallScreen = false,
+  }) {
+    final cards = [
+      _ActionCard(
+        icon: FontAwesomeIcons.clipboardQuestion,
+        title: 'Test Çöz',
+        subtitle: 'Bilgini test et',
+        gradient: const [Color(0xFF667EEA), Color(0xFF764BA2)],
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LessonSelectionScreen(mode: 'test'),
+          ),
+        ),
+      ),
+      _ActionCard(
+        icon: FontAwesomeIcons.checkDouble,
+        title: 'Doğru/Yanlış',
+        subtitle: 'Bilgi kartları',
+        gradient: const [Color(0xFFF093FB), Color(0xFFF5576C)],
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                const LessonSelectionScreen(mode: 'flashcard'),
+          ),
+        ),
+      ),
+      _ActionCard(
+        icon: FontAwesomeIcons.gamepad,
+        title: 'Oyun Odası',
+        subtitle: 'Eğlenerek öğren',
+        gradient: const [Color(0xFF11998E), Color(0xFF38EF7D)],
+        onTap: () => widget.onNavigateToTab?.call(2),
+      ),
+      _ActionCard(
+        icon: FontAwesomeIcons.medal,
+        title: 'Başarılarım',
+        subtitle: 'Rozetlerini gör',
+        gradient: const [Color(0xFFFFB347), Color(0xFFFFCC33)],
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AchievementsScreen()),
+        ),
+      ),
+    ];
+
+    if (isVertical) {
+      return ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: cards.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          return _buildActionCard(
+            cards[index],
+            isDarkMode,
+            index,
+            isSmallScreen: isSmallScreen,
+          );
+        },
+      );
+    }
+
+    final cardHeight = isSmallScreen ? 110.0 : 125.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        _buildQuickActionCard(
-          context,
-          icon: Icons.check_circle,
-          title: 'Doğru mu Yanlış mı',
-          color: Colors.blue,
-          isDarkMode: isDarkMode,
-          onTap: () {
-            // Süper Bilgi Kartları (flashcard) ders seçim ekranına yönlendir
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const LessonSelectionScreen(mode: 'flashcard'),
-              ),
-            );
-          },
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            '🚀 Hızlı Başlat',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 16 : 18,
+              fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
         ),
-        _buildQuickActionCard(
-          context,
-          icon: Icons.quiz,
-          title: 'Test Çöz',
-          color: Colors.orange,
-          isDarkMode: isDarkMode,
-          onTap: () {
-            // Şifre Kırma Operasyonu (test) ders seçim ekranına yönlendir
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LessonSelectionScreen(mode: 'test'),
-              ),
-            );
-          },
-        ),
-        _buildQuickActionCard(
-          context,
-          icon: Icons.games,
-          title: 'Oyun Oyna',
-          color: Colors.purple,
-          isDarkMode: isDarkMode,
-          onTap: () => onNavigateToTab?.call(2), // Oyunlar tab'ı
-        ),
-        _buildQuickActionCard(
-          context,
-          icon: Icons.emoji_events,
-          title: 'Başarılarım',
-          color: Colors.amber,
-          isDarkMode: isDarkMode,
-          onTap: () {
-            // Başarılarım ekranına yönlendir
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AchievementsScreen(),
-              ),
-            );
-          },
+        SizedBox(
+          height: cardHeight,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: cards.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return _buildActionCard(
+                cards[index],
+                isDarkMode,
+                index,
+                isSmallScreen: isSmallScreen,
+              );
+            },
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required Color color,
-    required bool isDarkMode,
-    VoidCallback? onTap,
+  Widget _buildActionCard(
+    _ActionCard card,
+    bool isDarkMode,
+    int index, {
+    bool isSmallScreen = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.6)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+    final cardWidth = isSmallScreen ? 130.0 : 145.0;
+    final iconSize = isSmallScreen ? 32.0 : 38.0;
+    final iconInnerSize = isSmallScreen ? 16.0 : 18.0;
+
+    return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            card.onTap();
+          },
+          child: Container(
+            width: cardWidth,
+            padding: EdgeInsets.all(isSmallScreen ? 12 : 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: card.gradient,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: card.gradient[0].withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: Colors.white, size: 32),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                Container(
+                  width: iconSize,
+                  height: iconSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  child: Center(
+                    child: FaIcon(
+                      card.icon,
+                      color: Colors.white,
+                      size: iconInnerSize,
+                    ),
+                  ),
+                ),
+                SizedBox(height: isSmallScreen ? 8 : 10),
+                Text(
+                  card.title,
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 13 : 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  card.subtitle,
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 9 : 10,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-        ),
-      ),
-    );
+        )
+        .animate(delay: Duration(milliseconds: 80 * index))
+        .fadeIn(duration: 350.ms)
+        .slideX(begin: 0.15, end: 0);
   }
+}
+
+/// Action Card data model
+class _ActionCard {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Color> gradient;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.gradient,
+    required this.onTap,
+  });
 }

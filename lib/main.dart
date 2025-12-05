@@ -33,6 +33,24 @@ void main() async {
   // Türkçe tarih formatını başlat
   await initializeDateFormatting('tr_TR', null);
 
+  // Global hata handler - Kırmızı hata ekranını önle
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    // Debug modunda hata detaylarını yazdır
+    debugPrint('❌ ErrorWidget Hatası: ${details.exception}');
+    debugPrint('📍 Stack: ${details.stack}');
+    // Boş bir widget döndür (kırmızı hata ekranı yerine)
+    return const SizedBox.shrink();
+  };
+
+  // Flutter framework hatalarını yakala
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('❌ Flutter Hatası: ${details.exception}');
+    debugPrint('📍 Library: ${details.library}');
+    debugPrint('📍 Context: ${details.context}');
+    // Varsayılan davranışı devre dışı bırak (kırmızı ekran gösterme)
+    // FlutterError.presentError(details);
+  };
+
   runApp(const ProviderScope(child: MyApp()));
 }
 

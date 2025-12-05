@@ -1,8 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lottie/lottie.dart';
 import '../services/database_helper.dart';
-import '../widgets/game_result_card.dart';
-import '../util/app_colors.dart';
 
+/// 🏆 Macera Günlüğü - Başarılar Ekranı
+/// Tüm oyun sonuçları ve başarılar burada sergilenir
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
 
@@ -15,10 +20,49 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   late TabController _tabController;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
+  // Tab verileri
+  final List<_TabData> _tabs = [
+    _TabData(
+      id: 'test',
+      title: 'Testler',
+      icon: FontAwesomeIcons.clipboardCheck,
+      gradientColors: [const Color(0xFF667eea), const Color(0xFF764ba2)],
+      glowColor: const Color(0xFF667eea),
+    ),
+    _TabData(
+      id: 'flashcard',
+      title: 'Kartlar',
+      icon: FontAwesomeIcons.layerGroup,
+      gradientColors: [const Color(0xFFf093fb), const Color(0xFFf5576c)],
+      glowColor: const Color(0xFFf093fb),
+    ),
+    _TabData(
+      id: 'fill_blanks',
+      title: 'Cümle',
+      icon: FontAwesomeIcons.penToSquare,
+      gradientColors: [const Color(0xFFAA00FF), const Color(0xFF7B1FA2)],
+      glowColor: const Color(0xFFAA00FF),
+    ),
+    _TabData(
+      id: 'guess',
+      title: 'Salla',
+      icon: FontAwesomeIcons.mobileScreenButton,
+      gradientColors: [const Color(0xFFFFD600), const Color(0xFFFFC107)],
+      glowColor: const Color(0xFFFFD600),
+    ),
+    _TabData(
+      id: 'memory',
+      title: 'Bul',
+      icon: FontAwesomeIcons.brain,
+      gradientColors: [const Color(0xFF00E676), const Color(0xFF00C853)],
+      glowColor: const Color(0xFF00E676),
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: _tabs.length, vsync: this);
   }
 
   @override
@@ -32,174 +76,794 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Başarılarım'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.card4Light,
-          labelColor: isDarkMode ? Colors.white : Colors.black,
-          unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'Testler'),
-            Tab(text: 'Kartlar'),
-            Tab(text: 'Cümle'),
-            Tab(text: 'Salla'),
-            Tab(text: 'Bul'),
-          ],
-        ),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDarkMode
-                ? [AppColors.backgroundDark, const Color(0xFF1a202c)]
-                : [AppColors.backgroundLight, Colors.white],
+      extendBodyBehindAppBar: true,
+      appBar: _buildAppBar(isDarkMode),
+      body: Stack(
+        children: [
+          // Arka plan
+          _buildBackground(isDarkMode),
+
+          // İçerik
+          SafeArea(
+            child: TabBarView(
+              controller: _tabController,
+              children: _tabs.map((tab) {
+                if (tab.id == 'guess') {
+                  return _buildGuessResultList(tab);
+                } else if (tab.id == 'memory') {
+                  return _buildMemoryResultList(tab);
+                }
+                return _buildResultList(tab);
+              }).toList(),
+            ),
           ),
-        ),
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildResultList('test'),
-            _buildResultList('flashcard'),
-            _buildResultList('fill_blanks'),
-            _buildGuessResultList(),
-            _buildMemoryResultList(),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildResultList(String gameType) {
+  PreferredSizeWidget _buildAppBar(bool isDarkMode) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+          child: const Icon(Icons.arrow_back_ios_new, size: 18),
+        ),
+      ),
+      title: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const FaIcon(
+              FontAwesomeIcons.trophy,
+              color: Colors.amber,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Colors.amber, Color(0xFFFFD700), Colors.orange],
+              ).createShader(bounds),
+              child: const Text(
+                'Macera Günlüğü',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: _buildTabBar(isDarkMode),
+      ),
+    );
+  }
+
+  Widget _buildTabBar(bool isDarkMode) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 360;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            indicator: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.amber.withValues(alpha: 0.3),
+                  Colors.orange.withValues(alpha: 0.3),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white60,
+            labelPadding: EdgeInsets.symmetric(horizontal: isNarrow ? 4 : 8),
+            labelStyle: TextStyle(
+              fontSize: isNarrow ? 9 : 11,
+              fontWeight: FontWeight.bold,
+            ),
+            unselectedLabelStyle: TextStyle(
+              fontSize: isNarrow ? 9 : 11,
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: _tabs.map((tab) {
+              return Tab(
+                child: isNarrow
+                    ? FaIcon(tab.icon, size: 14)
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FaIcon(tab.icon, size: 12),
+                            const SizedBox(width: 4),
+                            Text(tab.title),
+                          ],
+                        ),
+                      ),
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBackground(bool isDarkMode) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [
+                  const Color(0xFF0f0c29),
+                  const Color(0xFF302b63),
+                  const Color(0xFF24243e),
+                ]
+              : [
+                  const Color(0xFF667eea),
+                  const Color(0xFF764ba2),
+                  const Color(0xFFf093fb),
+                ],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Parıltı efektleri
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.amber.withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.purple.withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Boş durum widget'ı - Dedektif animasyonu ile
+  Widget _buildEmptyState(_TabData tab) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSmall = constraints.maxHeight < 500;
+        final animSize = isSmall ? 120.0 : 180.0;
+        final titleSize = isSmall ? 20.0 : 24.0;
+        final subtitleSize = isSmall ? 14.0 : 16.0;
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: isSmall ? 16 : 32,
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Dedektif animasyonu
+                SizedBox(
+                      width: animSize,
+                      height: animSize,
+                      child: Lottie.asset(
+                        'assets/animation/dedective.json',
+                        fit: BoxFit.contain,
+                        animate: true,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: animSize * 0.6,
+                          height: animSize * 0.6,
+                          decoration: BoxDecoration(
+                            color: tab.glowColor.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: FaIcon(
+                              FontAwesomeIcons.magnifyingGlass,
+                              size: animSize * 0.25,
+                              color: tab.glowColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .moveY(begin: 0, end: -10, duration: 2000.ms),
+
+                SizedBox(height: isSmall ? 16 : 24),
+
+                // Başlık
+                ShaderMask(
+                  shaderCallback: (bounds) => LinearGradient(
+                    colors: tab.gradientColors,
+                  ).createShader(bounds),
+                  child: Text(
+                    'Henüz Bir Macera Yok!',
+                    style: TextStyle(
+                      fontSize: titleSize,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+                SizedBox(height: isSmall ? 8 : 12),
+
+                // Alt başlık
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    _getEmptyMessage(tab.id),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: subtitleSize,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: isSmall ? 20 : 32),
+
+                // Başla butonu
+                GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isSmall ? 24 : 32,
+                          vertical: isSmall ? 12 : 16,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: tab.gradientColors),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: tab.glowColor.withValues(alpha: 0.4),
+                              blurRadius: 15,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FaIcon(
+                              FontAwesomeIcons.play,
+                              color: Colors.white,
+                              size: isSmall ? 14 : 16,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Maceraya Başla',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isSmall ? 14 : 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: 300.ms)
+                    .scale(begin: const Offset(0.8, 0.8)),
+              ],
+            ),
+          ),
+        );
+      },
+    ).animate().fadeIn(duration: 500.ms);
+  }
+
+  String _getEmptyMessage(String tabId) {
+    switch (tabId) {
+      case 'test':
+        return 'Test çözerek bilgini sına ve başarılarını burada takip et! 📝';
+      case 'flashcard':
+        return 'Bilgi kartlarıyla öğren, sonuçlarını burada gör! 🃏';
+      case 'fill_blanks':
+        return 'Cümle tamamlama oyunuyla kelime hazineni geliştir! ✍️';
+      case 'guess':
+        return 'Telefonu salla, sayıları tahmin et ve rekorlarını kır! 📱';
+      case 'memory':
+        return 'Hafıza oyunuyla beynini çalıştır, en iyi skorunu yap! 🧠';
+      default:
+        return 'Oynamaya başla ve başarılarını burada gör!';
+    }
+  }
+
+  Widget _buildResultList(_TabData tab) {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _dbHelper.getGameResults(gameType),
+      future: _dbHelper.getGameResults(tab.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingState(tab);
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Hata: ${snapshot.error}'));
+          return _buildErrorState(tab, snapshot.error.toString());
         }
 
         final results = snapshot.data ?? [];
 
         if (results.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.history,
-                  size: 64,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Henüz kayıtlı sonuç yok',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          );
+          return _buildEmptyState(tab);
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          physics: const BouncingScrollPhysics(),
           itemCount: results.length,
           itemBuilder: (context, index) {
             final result = results[index];
-            return GameResultCard(
-              gameType: result['gameType'] as String,
-              score: result['score'] as int,
-              correctCount: result['correctCount'] as int,
-              wrongCount: result['wrongCount'] as int,
-              totalQuestions: result['totalQuestions'] as int,
-              date: result['completedAt'] as String,
-            );
+            return _AchievementCard(result: result, tab: tab, index: index);
           },
         );
       },
     );
   }
 
-  Widget _buildGuessResultList() {
+  Widget _buildGuessResultList(_TabData tab) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _dbHelper.getGameResults('guess'),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildLoadingState(tab);
         }
 
         if (snapshot.hasError) {
-          return Center(child: Text('Hata: ${snapshot.error}'));
+          return _buildErrorState(tab, snapshot.error.toString());
         }
 
         final results = snapshot.data ?? [];
 
         if (results.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.vibration,
-                  size: 64,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Henüz Salla Bakalım oyunu oynamadın',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey.withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Son 10 oyun sonucu burada gösterilir',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          );
+          return _buildEmptyState(tab);
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          physics: const BouncingScrollPhysics(),
           itemCount: results.length,
           itemBuilder: (context, index) {
             final result = results[index];
-            return _buildGuessResultCard(result);
+            return _GuessResultCard(result: result, tab: tab, index: index);
           },
         );
       },
     );
   }
 
-  Widget _buildGuessResultCard(Map<String, dynamic> result) {
-    final score = result['score'] as int;
-    final correctCount = result['correctCount'] as int;
-    final totalQuestions = result['totalQuestions'] as int;
-    final dateStr = result['completedAt'] as String;
+  Widget _buildMemoryResultList(_TabData tab) {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _dbHelper.getGameResults('memory'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingState(tab);
+        }
+
+        if (snapshot.hasError) {
+          return _buildErrorState(tab, snapshot.error.toString());
+        }
+
+        final results = snapshot.data ?? [];
+
+        if (results.isEmpty) {
+          return _buildEmptyState(tab);
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          physics: const BouncingScrollPhysics(),
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            final result = results[index];
+            return _MemoryResultCard(result: result, tab: tab, index: index);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingState(_TabData tab) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(tab.glowColor),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Yükleniyor...',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(_TabData tab, String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FaIcon(
+            FontAwesomeIcons.triangleExclamation,
+            size: 48,
+            color: Colors.red.withValues(alpha: 0.7),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Bir hata oluştu',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            error,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tab verisi
+class _TabData {
+  final String id;
+  final String title;
+  final IconData icon;
+  final List<Color> gradientColors;
+  final Color glowColor;
+
+  const _TabData({
+    required this.id,
+    required this.title,
+    required this.icon,
+    required this.gradientColors,
+    required this.glowColor,
+  });
+}
+
+/// Genel başarı kartı
+class _AchievementCard extends StatelessWidget {
+  final Map<String, dynamic> result;
+  final _TabData tab;
+  final int index;
+
+  const _AchievementCard({
+    required this.result,
+    required this.tab,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final score = result['score'] as int? ?? 0;
+    final correctCount = result['correctCount'] as int? ?? 0;
+    final wrongCount = result['wrongCount'] as int? ?? 0;
+    final totalQuestions = result['totalQuestions'] as int? ?? 0;
+    final dateStr = result['completedAt'] as String? ?? '';
+
+    final percentage = totalQuestions > 0 ? correctCount / totalQuestions : 0.0;
+    final starCount = percentage >= 0.9
+        ? 3
+        : (percentage >= 0.7 ? 2 : (percentage >= 0.5 ? 1 : 0));
+
+    DateTime date;
+    try {
+      date = DateTime.parse(dateStr);
+    } catch (_) {
+      date = DateTime.now();
+    }
+
+    return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tab.gradientColors[0].withValues(alpha: 0.8),
+                      tab.gradientColors[1].withValues(alpha: 0.6),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: tab.glowColor.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Üst kısım: İkon, başlık ve yıldızlar
+                      Row(
+                        children: [
+                          // İkon
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: FaIcon(
+                              tab.icon,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+
+                          // Başlık
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _getGameTitle(tab.id),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${date.day}.${date.month}.${date.year}',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Yıldızlar
+                          Row(
+                            children: List.generate(3, (i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Icon(
+                                  i < starCount
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 22,
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // İstatistikler - Responsive
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Skor',
+                                  '$score',
+                                  FontAwesomeIcons.star,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Doğru',
+                                  '$correctCount',
+                                  FontAwesomeIcons.check,
+                                  color: Colors.greenAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Yanlış',
+                                  '$wrongCount',
+                                  FontAwesomeIcons.xmark,
+                                  color: Colors.redAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Başarı',
+                                  '${(percentage * 100).round()}%',
+                                  FontAwesomeIcons.percent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 100 * index))
+        .slideX(begin: 0.2, end: 0);
+  }
+
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon, {
+    Color? color,
+    bool isCompact = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          icon,
+          size: isCompact ? 12 : 14,
+          color: color ?? Colors.white.withValues(alpha: 0.7),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color ?? Colors.white,
+              fontSize: isCompact ? 14 : 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: isCompact ? 9 : 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getGameTitle(String tabId) {
+    switch (tabId) {
+      case 'test':
+        return 'Test Sonucu';
+      case 'flashcard':
+        return 'Bilgi Kartları';
+      case 'fill_blanks':
+        return 'Cümle Tamamla';
+      default:
+        return 'Oyun Sonucu';
+    }
+  }
+}
+
+/// Salla Bakalım sonuç kartı
+class _GuessResultCard extends StatelessWidget {
+  final Map<String, dynamic> result;
+  final _TabData tab;
+  final int index;
+
+  const _GuessResultCard({
+    required this.result,
+    required this.tab,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final score = result['score'] as int? ?? 0;
+    final correctCount = result['correctCount'] as int? ?? 0;
+    final totalQuestions = result['totalQuestions'] as int? ?? 0;
+    final dateStr = result['completedAt'] as String? ?? '';
     final details = result['details'] as String?;
 
-    // Parse details JSON
     String levelTitle = 'Bilinmeyen Seviye';
     int difficulty = 1;
     if (details != null && details.isNotEmpty) {
       try {
-        // Simple parsing for our known format
         final titleMatch = RegExp(
           r'"levelTitle":\s*"([^"]+)"',
         ).firstMatch(details);
@@ -214,7 +878,6 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         ? 3
         : (percentage >= 0.7 ? 2 : (percentage >= 0.4 ? 1 : 0));
 
-    // Parse date
     DateTime date;
     try {
       date = DateTime.parse(dateStr);
@@ -229,208 +892,229 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         ? Colors.green
         : (difficulty == 2 ? Colors.orange : Colors.red);
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.teal.shade400, Colors.cyan.shade600],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Üst kısım: Başlık ve yıldızlar
-              Row(
-                children: [
-                  const Icon(Icons.vibration, color: Colors.white, size: 24),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      levelTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+    return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tab.gradientColors[0].withValues(alpha: 0.8),
+                      tab.gradientColors[1].withValues(alpha: 0.6),
+                    ],
                   ),
-                  // Yıldızlar
-                  Row(
-                    children: List.generate(
-                      3,
-                      (i) => Icon(
-                        i < starCount ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
-                    ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Orta kısım: Skor ve istatistikler
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Skor
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  boxShadow: [
+                    BoxShadow(
+                      color: tab.glowColor.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                     children: [
-                      const Text(
-                        'Skor',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      // Üst kısım
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const FaIcon(
+                              FontAwesomeIcons.mobileScreenButton,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  levelTitle,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: difficultyColor.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        difficultyText,
+                                        style: TextStyle(
+                                          color: difficultyColor,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${date.day}.${date.month}.${date.year}',
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: List.generate(3, (i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Icon(
+                                  i < starCount
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 22,
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '$score',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+
+                      const SizedBox(height: 16),
+
+                      // İstatistikler - Responsive
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Skor',
+                                  '$score',
+                                  FontAwesomeIcons.star,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Doğru',
+                                  '$correctCount/$totalQuestions',
+                                  FontAwesomeIcons.bullseye,
+                                  color: Colors.greenAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Başarı',
+                                  '${(percentage * 100).round()}%',
+                                  FontAwesomeIcons.chartLine,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ),
-                  // Doğru/Toplam
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Doğru',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      Text(
-                        '$correctCount/$totalQuestions',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Zorluk
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: difficultyColor.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: difficultyColor),
-                    ),
-                    child: Text(
-                      difficultyText,
-                      style: TextStyle(
-                        color: difficultyColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-
-              // Alt kısım: Tarih
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMemoryResultList() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _dbHelper.getGameResults('memory'),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Center(child: Text('Hata: ${snapshot.error}'));
-        }
-
-        final results = snapshot.data ?? [];
-
-        if (results.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.grid_view_rounded,
-                  size: 64,
-                  color: Colors.grey.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Henüz Bul Bakalım oyunu oynamadın',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey.withValues(alpha: 0.8),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Kartları sırayla bul!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
             ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            final result = results[index];
-            return _buildMemoryResultCard(result);
-          },
-        );
-      },
-    );
+          ),
+        )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 100 * index))
+        .slideX(begin: 0.2, end: 0);
   }
 
-  Widget _buildMemoryResultCard(Map<String, dynamic> result) {
-    final score = result['score'] as int;
-    final wrongCount = result['wrongCount'] as int;
-    final dateStr = result['completedAt'] as String;
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon, {
+    Color? color,
+    bool isCompact = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          icon,
+          size: isCompact ? 12 : 14,
+          color: color ?? Colors.white.withValues(alpha: 0.7),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color ?? Colors.white,
+              fontSize: isCompact ? 14 : 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: isCompact ? 9 : 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bul Bakalım (Memory) sonuç kartı
+class _MemoryResultCard extends StatelessWidget {
+  final Map<String, dynamic> result;
+  final _TabData tab;
+  final int index;
+
+  const _MemoryResultCard({
+    required this.result,
+    required this.tab,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final score = result['score'] as int? ?? 0;
+    final wrongCount = result['wrongCount'] as int? ?? 0;
+    final dateStr = result['completedAt'] as String? ?? '';
     final details = result['details'] as String?;
 
-    // Parse details
     int moves = 0;
     int seconds = 0;
     if (details != null && details.isNotEmpty) {
@@ -442,7 +1126,6 @@ class _AchievementsScreenState extends State<AchievementsScreen>
       } catch (_) {}
     }
 
-    // Yıldız hesapla
     int starCount;
     if (wrongCount == 0) {
       starCount = 3;
@@ -454,13 +1137,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
       starCount = 0;
     }
 
-    // Süre formatla
     final mins = seconds ~/ 60;
     final secs = seconds % 60;
     final timeStr =
         '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
 
-    // Parse date
     DateTime date;
     try {
       date = DateTime.parse(dateStr);
@@ -468,148 +1149,188 @@ class _AchievementsScreenState extends State<AchievementsScreen>
       date = DateTime.now();
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [Colors.indigo.shade400, Colors.purple.shade600],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      tab.gradientColors[0].withValues(alpha: 0.8),
+                      tab.gradientColors[1].withValues(alpha: 0.6),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: tab.glowColor.withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // Üst kısım
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const FaIcon(
+                              FontAwesomeIcons.brain,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Bul Bakalım',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '${date.day}.${date.month}.${date.year}',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: List.generate(3, (i) {
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 2),
+                                child: Icon(
+                                  i < starCount
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 22,
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // İstatistikler - Responsive
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isNarrow = constraints.maxWidth < 280;
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Skor',
+                                  '$score',
+                                  FontAwesomeIcons.star,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Süre',
+                                  timeStr,
+                                  FontAwesomeIcons.stopwatch,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Hamle',
+                                  '$moves',
+                                  FontAwesomeIcons.hand,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                              Flexible(
+                                child: _buildStatItem(
+                                  'Hata',
+                                  '$wrongCount',
+                                  FontAwesomeIcons.xmark,
+                                  color: wrongCount == 0
+                                      ? Colors.greenAccent
+                                      : Colors.redAccent,
+                                  isCompact: isNarrow,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(delay: Duration(milliseconds: 100 * index))
+        .slideX(begin: 0.2, end: 0);
+  }
+
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon, {
+    Color? color,
+    bool isCompact = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          icon,
+          size: isCompact ? 12 : 14,
+          color: color ?? Colors.white.withValues(alpha: 0.7),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color ?? Colors.white,
+              fontSize: isCompact ? 14 : 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Üst kısım
-              Row(
-                children: [
-                  const Icon(
-                    Icons.grid_view_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Bul Bakalım',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Yıldızlar
-                  Row(
-                    children: List.generate(
-                      3,
-                      (i) => Icon(
-                        i < starCount ? Icons.star : Icons.star_border,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Orta kısım
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Skor
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Skor',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      Text(
-                        '$score',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Süre
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Süre',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      Text(
-                        timeStr,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Hamle/Hata
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '$moves hamle',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        '$wrongCount hata',
-                        style: TextStyle(
-                          color: wrongCount == 0
-                              ? Colors.greenAccent
-                              : Colors.orangeAccent,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Alt kısım: Tarih
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.access_time,
-                    color: Colors.white.withValues(alpha: 0.7),
-                    size: 14,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${date.day}.${date.month}.${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: isCompact ? 9 : 11,
           ),
         ),
-      ),
+      ],
     );
   }
 }

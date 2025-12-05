@@ -73,7 +73,11 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
           _updateStatus();
         }
 
-        if (kDebugMode) debugPrint('Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted');
+        if (kDebugMode) {
+          debugPrint(
+            'Sınav yüklendi: ${exam.examId}, Tamamlandı: $hasCompleted',
+          );
+        }
       } else {
         // Sınav yok - kart yine de gösterilecek
         setState(() {
@@ -139,201 +143,280 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         gradient: _getGradient(),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
             color: _getMainColor().withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _onCardTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Üst kısım - Başlık ve ikon
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _getStatusIcon(),
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Dekoratif daireler
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+            ),
+            Positioned(
+              left: -20,
+              bottom: -20,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            // Ana içerik
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _onCardTap,
+                borderRadius: BorderRadius.circular(24),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Üst kısım - Başlık ve ikon
+                      Row(
                         children: [
-                          Text(
-                            'Türkiye Geneli Deneme',
-                            style: const TextStyle(
+                          // Trophy ikonu
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Icon(
+                              _getStatusIcon(),
                               color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _examService.generateRoomName(
-                              _examService.getThisWeekMonday(),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '🏆 Türkiye Geneli Deneme',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _examService.generateRoomName(
+                                    _examService.getThisWeekMonday(),
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 14,
+                          ),
+                          // Durum badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.4),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              _hasCompleted ? '✓ Tamamlandı' : _status.label,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    // Durum badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _hasCompleted ? 'Tamamlandı ✓' : _status.label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+
+                      const SizedBox(height: 16),
+
+                      // Motivasyon mesajı
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // Motivasyon mesajı
-                Text(
-                  _getMotivationMessage(),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 15,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Alt kısım - Geri sayım ve buton
-                Row(
-                  children: [
-                    // Geri sayım
-                    if (_status != ExamRoomStatus.sonuclanmis) ...[
-                      Icon(
-                        Icons.timer_outlined,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatDuration(_remaining),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-
-                    const Spacer(),
-
-                    // Aksiyon butonu
-                    ElevatedButton(
-                      onPressed: _canTakeAction() ? _onCardTap : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: _getMainColor(),
-                        disabledBackgroundColor: Colors.white.withValues(
-                          alpha: 0.5,
-                        ),
-                        disabledForegroundColor: Colors.grey,
-                        shape: RoundedRectangleBorder(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                        child: Text(
+                          _getMotivationMessage(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+
+                      const SizedBox(height: 16),
+
+                      // Alt kısım - Geri sayım ve buton
+                      Row(
                         children: [
-                          Text(
-                            _getButtonText(),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          // Geri sayım
+                          if (_status != ExamRoomStatus.sonuclanmis) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.timer_outlined,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _formatDuration(_remaining),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          const Spacer(),
+
+                          // Aksiyon butonu
+                          ElevatedButton(
+                            onPressed: _canTakeAction() ? _onCardTap : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: _getMainColor(),
+                              disabledBackgroundColor: Colors.white.withValues(
+                                alpha: 0.5,
+                              ),
+                              disabledForegroundColor: Colors.grey,
+                              elevation: 4,
+                              shadowColor: Colors.black.withValues(alpha: 0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 14,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _getButtonText(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(_getButtonIcon(), size: 18),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 8),
-                          Icon(_getButtonIcon(), size: 18),
                         ],
                       ),
-                    ),
-                  ],
-                ),
 
-                // Tamamlandıysa puan göster
-                if (_hasCompleted && _userResult != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatItem(
-                          'Doğru',
-                          _userResult!.dogru?.toString() ?? '-',
-                          Colors.green,
-                        ),
-                        _buildStatItem(
-                          'Yanlış',
-                          _userResult!.yanlis?.toString() ?? '-',
-                          Colors.red,
-                        ),
-                        _buildStatItem(
-                          'Boş',
-                          _userResult!.bos?.toString() ?? '-',
-                          Colors.grey,
-                        ),
-                        _buildStatItem(
-                          'Puan',
-                          _userResult!.puan?.toString() ?? '-',
-                          Colors.amber,
+                      // Tamamlandıysa puan göster
+                      if (_hasCompleted && _userResult != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              _buildStatItem(
+                                'Doğru',
+                                _userResult!.dogru?.toString() ?? '-',
+                                Colors.green,
+                              ),
+                              _buildStatItem(
+                                'Yanlış',
+                                _userResult!.yanlis?.toString() ?? '-',
+                                Colors.red,
+                              ),
+                              _buildStatItem(
+                                'Boş',
+                                _userResult!.bos?.toString() ?? '-',
+                                Colors.grey,
+                              ),
+                              _buildStatItem(
+                                'Puan',
+                                _userResult!.puan?.toString() ?? '-',
+                                Colors.amber,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -342,94 +425,136 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
   /// Sınav yokken gösterilecek kart
   Widget _buildNoExamCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.grey.shade400, Colors.grey.shade600],
+          colors: [Colors.grey.shade500, Colors.grey.shade700],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.4),
-            blurRadius: 12,
+            color: Colors.grey.withValues(alpha: 0.3),
+            blurRadius: 16,
             offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.event_busy,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+            // Dekoratif daireler
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      const Text(
-                        'Türkiye Geneli Deneme',
-                        style: TextStyle(
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.event_busy,
                           color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          size: 28,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _examService.generateRoomName(
-                          _examService.getThisWeekMonday(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '🏆 Türkiye Geneli Deneme',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _examService.generateRoomName(
+                                _examService.getThisWeekMonday(),
+                              ),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
                         ),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 14,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Text(
+                          '⏳ Bekleniyor',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Bekleniyor',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Henüz bu hafta için sınav yayınlanmadı. Yakında burada olacak! 📚',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Henüz bu hafta için sınav yayınlanmadı. Yakında burada olacak! 📚',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontSize: 15,
-                fontStyle: FontStyle.italic,
+                ],
               ),
             ),
           ],
@@ -681,4 +806,3 @@ class _WeeklyExamCardState extends ConsumerState<WeeklyExamCard> {
     }
   }
 }
-

@@ -13,6 +13,51 @@ class SyncController extends StateNotifier<SyncState> {
   // ignore: unused_field
   final DatabaseHelper _dbHelper;
 
+  // 🎯 Eğlenceli yükleme mesajları - her aşama için farklı
+  static const List<String> _manifestMessages = [
+    '🗺️ Hazine haritası aranıyor...',
+    '📜 Büyülü parşömen açılıyor...',
+    '🔮 Kristal küre okunuyor...',
+  ];
+
+  static const List<String> _firstRunMessages = [
+    '🏰 Bilgi kalesi inşa ediliyor...',
+    '✨ Sihirli dünya kuruluyor...',
+    '🌈 Gökkuşağı köprüsü yapılıyor...',
+  ];
+
+  static const List<String> _downloadMessages = [
+    '🚀 Uzay gemisi içerik topluyor...',
+    '🧲 Bilgi mıknatısı çalışıyor...',
+    '🎣 Bilgi balıkları yakalanıyor...',
+    '🌟 Yıldız tozu serpiliyor...',
+    '🎪 Eğlence çadırı kuruluyor...',
+    '🦋 Bilgi kelebekleri uçuşuyor...',
+    '🍪 Bilgi kurabiyeleri pişiyor...',
+    '🎨 Renkli dünyalar boyanıyor...',
+    '🎭 Eğlence maskeleri takılıyor...',
+    '🎸 Rock yıldızı sahneye çıkıyor...',
+  ];
+
+  static const List<String> _updateMessages = [
+    '🔍 Dedektif yeni ipuçları arıyor...',
+    '🕵️ Gizli güncellemeler keşfediliyor...',
+    '🔭 Uzaydan yeni sinyaller geliyor...',
+  ];
+
+  static const List<String> _completeMessages = [
+    '🎉 Süper! Her şey hazır!',
+    '🏆 Tebrikler! Macera başlıyor!',
+    '⭐ Harika! Yıldız gibi parlıyorsun!',
+    '🦸 Süper kahraman modu aktif!',
+  ];
+
+  int _messageIndex = 0;
+
+  String _getRandomMessage(List<String> messages) {
+    return messages[_messageIndex++ % messages.length];
+  }
+
   SyncController({
     required FirebaseStorageService storageService,
     required LocalPreferencesService prefsService,
@@ -25,15 +70,16 @@ class SyncController extends StateNotifier<SyncState> {
   /// Ana senkronizasyon metodu
   Future<void> syncContent(String className) async {
     try {
+      _messageIndex = DateTime.now().millisecond; // Rastgele başlangıç
       state = state.copyWith(
         isSyncing: true,
         progress: 0.0,
-        message: 'Senkronizasyon başlatılıyor...',
+        message: '🚀 Motor çalıştırılıyor...',
         error: null,
       );
 
       // 1. Manifest'i indir
-      state = state.copyWith(message: 'Manifest indiriliyor...');
+      state = state.copyWith(message: _getRandomMessage(_manifestMessages));
       final manifest = await _downloadManifest(className);
 
       // 2. İlk çalıştırma kontrolü
@@ -53,14 +99,14 @@ class SyncController extends StateNotifier<SyncState> {
       state = state.copyWith(
         isSyncing: false,
         progress: 1.0,
-        message: 'Senkronizasyon tamamlandı!',
+        message: _getRandomMessage(_completeMessages),
       );
     } catch (e) {
       if (kDebugMode) debugPrint('Sync hatası: $e');
       state = state.copyWith(
         isSyncing: false,
         error: 'Senkronizasyon hatası: $e',
-        message: 'Hata oluştu',
+        message: '😔 Hay aksi! Bir sorun oldu...',
       );
     }
   }
@@ -76,7 +122,7 @@ class SyncController extends StateNotifier<SyncState> {
 
   /// İlk çalıştırma - Tüm içeriği indir
   Future<void> _handleFirstRun(String className, Manifest manifest) async {
-    state = state.copyWith(message: 'İlk kurulum yapılıyor...');
+    state = state.copyWith(message: _getRandomMessage(_firstRunMessages));
 
     // Sınıfa ait dosyaları filtrele
     final classFiles = manifest.files
@@ -95,7 +141,7 @@ class SyncController extends StateNotifier<SyncState> {
       try {
         state = state.copyWith(
           currentFile: file.path,
-          message: 'İndiriliyor: ${file.path}',
+          message: _getRandomMessage(_downloadMessages),
           progress: downloadedCount / totalFiles,
         );
 
@@ -116,7 +162,7 @@ class SyncController extends StateNotifier<SyncState> {
       try {
         state = state.copyWith(
           currentFile: file.path,
-          message: 'İndiriliyor: ${file.path}',
+          message: _getRandomMessage(_downloadMessages),
           progress: downloadedCount / totalFiles,
         );
 
@@ -138,13 +184,16 @@ class SyncController extends StateNotifier<SyncState> {
     String className,
     Manifest manifest,
   ) async {
-    state = state.copyWith(message: 'Güncellemeler kontrol ediliyor...');
+    state = state.copyWith(message: _getRandomMessage(_updateMessages));
 
     // Yerel versiyonu al
     final localVersion = await _prefsService.getLastSyncVersion();
 
     if (localVersion == manifest.version) {
-      state = state.copyWith(message: 'Zaten güncel!', progress: 1.0);
+      state = state.copyWith(
+        message: '✨ Her şey güncel! Hazırsın!',
+        progress: 1.0,
+      );
       return;
     }
 
@@ -161,7 +210,10 @@ class SyncController extends StateNotifier<SyncState> {
         .toList();
 
     if (newFiles.isEmpty) {
-      state = state.copyWith(message: 'Yeni dosya yok', progress: 1.0);
+      state = state.copyWith(
+        message: '🎯 Süper! Yeni bir şey yok!',
+        progress: 1.0,
+      );
       return;
     }
 
@@ -172,14 +224,16 @@ class SyncController extends StateNotifier<SyncState> {
     final totalFiles = archiveFiles.length + jsonFiles.length;
     int downloadedCount = 0;
 
-    state = state.copyWith(message: '$totalFiles yeni dosya bulundu');
+    state = state.copyWith(
+      message: '🎁 Vay! $totalFiles yeni sürpriz bulundu!',
+    );
 
     // tar.bz2 arşiv dosyalarını indir
     for (final file in archiveFiles) {
       try {
         state = state.copyWith(
           currentFile: file.path,
-          message: 'İndiriliyor: ${file.path}',
+          message: _getRandomMessage(_downloadMessages),
           progress: downloadedCount / totalFiles,
         );
 
@@ -200,7 +254,7 @@ class SyncController extends StateNotifier<SyncState> {
       try {
         state = state.copyWith(
           currentFile: file.path,
-          message: 'İndiriliyor: ${file.path}',
+          message: _getRandomMessage(_downloadMessages),
           progress: downloadedCount / totalFiles,
         );
 
@@ -265,4 +319,3 @@ class SyncController extends StateNotifier<SyncState> {
     state = const SyncState();
   }
 }
-

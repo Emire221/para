@@ -77,25 +77,35 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimationSequence() async {
+    // Splash ekranı minimum süresini takip et
+    final splashStartTime = DateTime.now();
+    const minimumSplashDuration = Duration(seconds: 2);
+
     // Big Bang - 0.5 saniye
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     setState(() => _showBigBang = false);
 
-    // Maskotlar beliriyor - 0.5 saniye sonra
-    await Future.delayed(const Duration(milliseconds: 100));
+    // Maskotlar beliriyor - 0.3 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
     setState(() => _showMascots = true);
 
-    // Başlık beliriyor - 1 saniye sonra
-    await Future.delayed(const Duration(seconds: 1));
+    // Başlık beliriyor - 0.5 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     setState(() => _showTitle = true);
 
-    // Loading beliriyor - 1 saniye sonra
-    await Future.delayed(const Duration(seconds: 1));
+    // Loading beliriyor - 0.5 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
     setState(() => _showLoading = true);
+
+    // Minimum 2 saniye geçmesini garantile
+    final elapsed = DateTime.now().difference(splashStartTime);
+    if (elapsed < minimumSplashDuration) {
+      await Future.delayed(minimumSplashDuration - elapsed);
+    }
 
     // Mesaj değiştirme timer'ı
     _messageTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
@@ -109,8 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
       });
     });
 
-    // 4 saniye sonra Login'e geçiş
-    await Future.delayed(const Duration(seconds: 4));
+    // Login'e geçiş
     if (!mounted) return;
     _navigateToLogin();
   }
@@ -345,36 +354,42 @@ class _SplashScreenState extends State<SplashScreen>
           final screenWidth = constraints.maxWidth;
           final isSmallScreen = screenHeight < 600;
 
-          // Responsive boyutlar
-          final mascotSize = (screenWidth * 0.22).clamp(60.0, 120.0);
-          final titleSize = (screenWidth * 0.12).clamp(32.0, 64.0);
-          final loadingSize = (screenWidth * 0.25).clamp(80.0, 150.0);
+          // Responsive boyutlar - Ekran genişliğine göre otomatik ayar
+          // 3 mascot + boşluklar = yaklaşık 3.5 * mascotSize
+          // Merkez mascot 1.3x, yanlardakiler 1x = toplam 3.3x
+          // Güvenli margin için 3.8x kullanıyoruz
+          final maxMascotSize = screenWidth / 3.8;
+          final mascotSize = maxMascotSize.clamp(70.0, 150.0);
+          final titleSize = (screenWidth * 0.11).clamp(32.0, 64.0);
+          final loadingSize = (screenWidth * 0.30).clamp(80.0, 160.0);
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Spacer üst
-              SizedBox(height: screenHeight * 0.1),
+          return Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Başlık - En üstte
+                  if (_showTitle)
+                    _buildTitle(titleSize, screenWidth)
+                  else
+                    SizedBox(height: titleSize + 20),
 
-              // Başlık
-              if (_showTitle)
-                _buildTitle(titleSize)
-              else
-                SizedBox(height: titleSize + 20),
+                  SizedBox(height: isSmallScreen ? 20 : 35),
 
-              SizedBox(height: isSmallScreen ? 20 : 40),
+                  // Maskotlar - Ortada, ekrana sığacak şekilde
+                  _buildMascots(mascotSize, screenWidth),
 
-              // Maskotlar
-              _buildMascots(mascotSize),
+                  SizedBox(height: isSmallScreen ? 20 : 35),
 
-              SizedBox(height: isSmallScreen ? 20 : 40),
-
-              // Loading ve mesajlar
-              if (_showLoading) _buildLoadingSection(loadingSize),
-
-              // Spacer alt
-              const Spacer(),
-            ],
+                  // Loading ve mesajlar - Alt kısım
+                  if (_showLoading)
+                    _buildLoadingSection(loadingSize, screenWidth)
+                  else
+                    SizedBox(height: loadingSize + 30),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -382,91 +397,151 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   /// Başlık animasyonu
-  Widget _buildTitle(double fontSize) {
+  Widget _buildTitle(double fontSize, double screenWidth) {
+    final letterSpacing = (screenWidth * 0.012).clamp(2.0, 6.0);
+
     return Column(
       children: [
-        // Ana başlık
-        Text(
-              'BİLGİ AVCISI',
-              style: GoogleFonts.bangers(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: _primaryPurple,
-                letterSpacing: 4,
-                shadows: [
-                  Shadow(
-                    color: _primaryPurple.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-            )
-            .animate()
-            .moveY(
-              begin: -50,
-              end: 0,
-              duration: 600.ms,
-              curve: Curves.elasticOut,
-            )
-            .fadeIn(duration: 400.ms),
+        // Ana başlık - Responsive
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child:
+                Text(
+                      'BİLGİ AVCISI',
+                      style: GoogleFonts.bangers(
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryPurple,
+                        letterSpacing: letterSpacing,
+                        shadows: [
+                          Shadow(
+                            color: _primaryPurple.withValues(alpha: 0.5),
+                            blurRadius: 12,
+                            offset: const Offset(2, 2),
+                          ),
+                          Shadow(
+                            color: _energeticCoral.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(-1, 1),
+                          ),
+                        ],
+                      ),
+                    )
+                    .animate()
+                    .moveY(
+                      begin: -40,
+                      end: 0,
+                      duration: 600.ms,
+                      curve: Curves.elasticOut,
+                    )
+                    .fadeIn(duration: 400.ms)
+                    .shimmer(
+                      delay: 600.ms,
+                      duration: 1200.ms,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+          ),
+        ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
-        // Alt başlık
-        Text(
-              '🎮 Öğrenmenin Eğlenceli Yolu 🎮',
-              style: GoogleFonts.nunito(
-                fontSize: fontSize * 0.35,
-                fontWeight: FontWeight.w600,
-                color: _darkOverlay.withValues(alpha: 0.7),
-              ),
-            )
-            .animate(delay: 300.ms)
-            .fadeIn(duration: 400.ms)
-            .slideX(begin: -0.2, end: 0),
+        // Alt başlık - Responsive
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child:
+                Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            _primaryPurple.withValues(alpha: 0.1),
+                            _turquoise.withValues(alpha: 0.1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '🎮 Öğrenmenin Eğlenceli Yolu 🎮',
+                        style: GoogleFonts.nunito(
+                          fontSize: (fontSize * 0.38).clamp(12.0, 28.0),
+                          fontWeight: FontWeight.w700,
+                          color: _darkOverlay.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    )
+                    .animate(delay: 300.ms)
+                    .fadeIn(duration: 400.ms)
+                    .slideX(begin: -0.2, end: 0)
+                    .then()
+                    .shimmer(
+                      delay: 500.ms,
+                      duration: 1000.ms,
+                      color: _turquoise.withValues(alpha: 0.3),
+                    ),
+          ),
+        ),
       ],
     );
   }
 
   /// Maskotlar (Kedi, Köpek, Tavşan)
-  Widget _buildMascots(double size) {
+  Widget _buildMascots(double size, double screenWidth) {
     if (!_showMascots) {
-      return SizedBox(height: size);
+      return SizedBox(height: size * 1.25);
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Kedi (Sol)
-        _buildMascot(
-          assetPath: 'assets/animation/kedi_mascot.json',
-          mascotType: 'kedi',
-          size: size,
-          delay: 0,
+    // Mascotlar arası boşluk - responsive
+    final spacing = (screenWidth * 0.02).clamp(4.0, 12.0);
+    // Merkez mascot çarpanı
+    final centerMultiplier = screenWidth < 360 ? 1.15 : 1.25;
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Kedi (Sol)
+            _buildMascot(
+              assetPath: 'assets/animation/kedi_mascot.json',
+              mascotType: 'kedi',
+              size: size,
+              delay: 0,
+            ),
+
+            SizedBox(width: spacing),
+
+            // Köpek (Orta - biraz daha büyük)
+            _buildMascot(
+              assetPath: 'assets/animation/kopek_mascot.json',
+              mascotType: 'kopek',
+              size: size * centerMultiplier,
+              delay: 100,
+              isCenter: true,
+            ),
+
+            SizedBox(width: spacing),
+
+            // Tavşan (Sağ)
+            _buildMascot(
+              assetPath: 'assets/animation/tavsan_mascot.json',
+              mascotType: 'tavsan',
+              size: size,
+              delay: 200,
+            ),
+          ],
         ),
-
-        SizedBox(width: size * 0.1),
-
-        // Köpek (Orta - biraz büyük)
-        _buildMascot(
-          assetPath: 'assets/animation/kopek_mascot.json',
-          mascotType: 'kopek',
-          size: size * 1.2,
-          delay: 100,
-          isCenter: true,
-        ),
-
-        SizedBox(width: size * 0.1),
-
-        // Tavşan (Sağ)
-        _buildMascot(
-          assetPath: 'assets/animation/tavsan_mascot.json',
-          mascotType: 'tavsan',
-          size: size,
-          delay: 200,
-        ),
-      ],
+      ),
     );
   }
 
@@ -547,13 +622,15 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   /// Loading bölümü
-  Widget _buildLoadingSection(double size) {
+  Widget _buildLoadingSection(double size, double screenWidth) {
+    final messageFontSize = (screenWidth * 0.045).clamp(14.0, 20.0);
+
     return Column(
       children: [
         // Loading animasyonu
         SizedBox(
               width: size,
-              height: size * 0.6,
+              height: size * 0.65,
               child: Lottie.asset(
                 'assets/animation/loading-kum.json',
                 fit: BoxFit.contain,
@@ -571,32 +648,63 @@ class _SplashScreenState extends State<SplashScreen>
 
         const SizedBox(height: 16),
 
-        // Komik mesajlar
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.3),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
-            );
-          },
-          child: Text(
-            _loadingMessages[_currentMessageIndex],
-            key: ValueKey<int>(_currentMessageIndex),
-            style: GoogleFonts.nunito(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: _darkOverlay.withValues(alpha: 0.7),
-            ),
-            textAlign: TextAlign.center,
+        // Komik mesajlar - Responsive
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child:
+                Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: _primaryPurple.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.3),
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          _loadingMessages[_currentMessageIndex],
+                          key: ValueKey<int>(_currentMessageIndex),
+                          style: GoogleFonts.nunito(
+                            fontSize: messageFontSize,
+                            fontWeight: FontWeight.w700,
+                            color: _darkOverlay.withValues(alpha: 0.85),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                    .animate()
+                    .fadeIn(delay: 200.ms)
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1, 1),
+                      duration: 300.ms,
+                    ),
           ),
-        ).animate().fadeIn(delay: 200.ms),
+        ),
       ],
     );
   }
