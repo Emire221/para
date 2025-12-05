@@ -720,7 +720,7 @@ class _LoginScreenState extends State<LoginScreen>
       child: TextButton(
         onPressed: () {
           _hapticLight();
-          // Şifre sıfırlama sayfasına yönlendir
+          _showForgotPasswordDialog();
         },
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -735,6 +735,177 @@ class _LoginScreenState extends State<LoginScreen>
         ),
       ),
     ).animate(delay: 350.ms).fadeIn(duration: 400.ms);
+  }
+
+  /// 🔐 Şifremi Unuttum Dialog
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.lock_reset_rounded,
+                color: _primaryPurple,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Şifre Sıfırlama',
+                style: GoogleFonts.nunito(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _darkText,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'E-posta adresinizi girin, şifre sıfırlama linki gönderelim.',
+              style: GoogleFonts.nunito(
+                fontSize: 14,
+                color: _darkText.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'E-posta adresiniz',
+                hintStyle: GoogleFonts.nunito(
+                  color: _darkText.withValues(alpha: 0.4),
+                ),
+                prefixIcon: Icon(Icons.email_outlined, color: _primaryPurple),
+                filled: true,
+                fillColor: _backgroundBase,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: _primaryPurple, width: 2),
+                ),
+              ),
+              style: GoogleFonts.nunito(
+                color: _darkText,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'İptal',
+              style: GoogleFonts.nunito(
+                color: _darkText.withValues(alpha: 0.6),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final email = resetEmailController.text.trim();
+              if (email.isEmpty) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Lütfen e-posta adresinizi girin',
+                      style: GoogleFonts.nunito(),
+                    ),
+                    backgroundColor: _energeticCoral,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+                return;
+              }
+
+              try {
+                await FirebaseAuth.instance.sendPasswordResetEmail(
+                  email: email,
+                );
+
+                if (!ctx.mounted) return;
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Şifre sıfırlama linki gönderildi!',
+                            style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: _turquoise,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.all(16),
+                  ),
+                );
+              } catch (e) {
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Link gönderilemedi. E-postayı kontrol edin.',
+                      style: GoogleFonts.nunito(),
+                    ),
+                    backgroundColor: _energeticCoral,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: Text(
+              'Gönder',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildLoginButton(bool isSmallScreen) {

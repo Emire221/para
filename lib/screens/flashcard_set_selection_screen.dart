@@ -151,7 +151,6 @@ class _FlashcardSetSelectionScreenState
                                 builder: (context) => FlashcardsScreen(
                                   topicId: widget.topicId,
                                   topicName: flashcardSet.kartAdi,
-                                  lessonName: widget.lessonName,
                                   initialCards: flashcardSet.kartlar,
                                 ),
                               ),
