@@ -1,7 +1,7 @@
 # Manifest ve Arşiv Yönetim Araçları
 
-**Son Güncelleme:** 4 Aralık 2025  
-**Versiyon:** v1.3.0
+**Son Güncelleme:** 5 Aralık 2025  
+**Versiyon:** v1.4.0
 
 Bu klasörde, Firebase Storage'daki dosyalarınızı yönetmek için yardımcı araçlar bulunur.
 
@@ -64,7 +64,6 @@ dart tools/generate_manifest.dart storage/3_Sinif
 ├── bilgikart_1.json     # kartSetID alanı içermeli
 ├── bilgikart_2.json     # kartSetID alanı içermeli
 ├── level_001.json       # levelID alanı içermeli (Cümle Tamamlama)
-├── arena_001.json       # arenaSetID alanı içermeli (Arena Düello)
 ├── guess_001.json       # guessID alanı içermeli (Salla Bakalım)
 └── ... (diğer test ve bilgi kartı dosyaları)
 ```
@@ -75,8 +74,9 @@ dart tools/generate_manifest.dart storage/3_Sinif
 | testID | Test | Testler |
 | kartSetID | Bilgi Kartı | BilgiKartlari |
 | levelID | Cümle Tamamlama | FillBlanksLevels |
-| arenaSetID | Arena Düello | ArenaSets |
 | guessID | Salla Bakalım | GuessLevels |
+
+> **Not (v1.4.0):** `arenaSetID` artık desteklenmiyor. Arena sistemi kaldırıldı ve yerine 1v1 Düello sistemi geldi.
 
 **ÖNEMLİ:** Tüm JSON dosyaları doğrudan arşivin kök dizininde olmalıdır. Alt klasör kullanmayın!
 
@@ -84,28 +84,27 @@ dart tools/generate_manifest.dart storage/3_Sinif
 
 Manifest.json dosyanızda, **sadece** tar.bz2 arşiv dosyasını ve temel JSON dosyalarını (derslistesi, konulistesi, konuvideo) listelemeniz yeterlidir. Arşiv içindeki test ve bilgi kartı dosyaları otomatik olarak algılanacaktır.
 
-Ancak eğer isterseniz, arşiv içindeki her dosyayı ayrı ayrı da listeleyebilirsiniz. Bu durumda:
+Ancak eğer isterseniz, arşiv içindeki her dosyayı ayrı ayrı da listeleyebilirsiniz:
 
 ```json
 {
   "version": "1.0.0",
-  "updatedAt": "2025-11-28T23:48:00.000Z",
+  "updatedAt": "2025-12-05T10:00:00.000Z",
   "files": [
     {
       "path": "3_Sinif/3_Sinif_v1.tar.bz2",
       "type": "tar.bz2",
       "version": "v1",
       "hash": "gerçek_hash_değeri",
-      "addedAt": "2025-11-28T10:00:00.000Z"
+      "addedAt": "2025-12-05T10:00:00.000Z"
     },
     {
       "path": "3_Sinif/derslistesi.json",
       "type": "json",
       "version": "v1",
       "hash": "gerçek_hash_değeri",
-      "addedAt": "2025-11-28T10:00:00.000Z"
+      "addedAt": "2025-12-05T10:00:00.000Z"
     }
-    // ... diğer dosyalar
   ]
 }
 ```
@@ -135,6 +134,8 @@ Ya da yukarıdaki Dart araçlarını kullanın - otomatik hesaplarlar.
 1. `list_archive_contents.dart` ile arşiv içeriğini kontrol edin
 2. Tüm test dosyalarının `testID` alanı içerdiğinden emin olun
 3. Tüm bilgi kartı dosyalarının `kartSetID` alanı içerdiğinden emin olun
+4. Cümle tamamlama için `levelID` alanı olmalı
+5. Salla Bakalım için `guessID` alanı olmalı
 
 ### "Arşiv açılmıyor"
 
@@ -147,3 +148,16 @@ Ya da yukarıdaki Dart araçlarını kullanın - otomatik hesaplarlar.
 1. JSON formatının doğru olduğundan emin olun
 2. Tüm gerekli alanların (`version`, `updatedAt`, `files`) bulunduğundan emin olun
 3. Tarih formatlarının ISO 8601 standardında olduğundan emin olun
+
+---
+
+## v1.4.0 Değişiklikleri
+
+- ❌ `arenaSetID` desteği kaldırıldı (Arena sistemi kaldırıldı)
+- ✅ 1v1 Düello sistemi eklendi (ayrı JSON dosyası gerektirmez)
+- ✅ Mevcut `testID` ve `levelID` içerikleri düello için de kullanılır
+
+---
+
+**Son Güncelleme:** 5 Aralık 2025  
+**Versiyon:** v1.4.0
