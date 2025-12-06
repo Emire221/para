@@ -222,6 +222,34 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
   // SWIPE & CARD LOGIC
   // ─────────────────────────────────────────────────────────────────────────
 
+  /// Kartı ortaya geri getiren animasyonlu fonksiyon
+  Future<void> _animateCardToCenter() async {
+    const duration = Duration(milliseconds: 300);
+    const steps = 20;
+    final stepDuration = duration.inMilliseconds ~/ steps;
+
+    final startOffset = _dragOffset;
+    final startRotation = _dragRotation;
+
+    for (int i = 1; i <= steps; i++) {
+      if (!mounted) return;
+      final progress = Curves.easeOutCubic.transform(i / steps);
+      setState(() {
+        _dragOffset = Offset.lerp(startOffset, Offset.zero, progress)!;
+        _dragRotation = startRotation * (1 - progress);
+      });
+      await Future.delayed(Duration(milliseconds: stepDuration));
+    }
+
+    // Tam olarak sıfırla
+    if (mounted) {
+      setState(() {
+        _dragOffset = Offset.zero;
+        _dragRotation = 0.0;
+      });
+    }
+  }
+
   /// Sağa kaydır = "Doğru" dedi, Sola kaydır = "Yanlış" dedi
   void _handleSwipe(DismissDirection direction) async {
     if (_isProcessing || _allCards.isEmpty) return;
@@ -264,7 +292,10 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
       }
     }
 
-    // Kartı döndürüp sonucu göster
+    // 1️⃣ Önce kartı ortaya geri getir (animasyonlu)
+    await _animateCardToCenter();
+
+    // 2️⃣ Kartı döndürüp sonucu göster
     setState(() => _showingResult = true);
 
     // Kart dönsün ve sonucu göstersin
@@ -273,8 +304,8 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen>
       _isFlipped = true;
     }
 
-    // Kısa bir süre sonucu göster, sonra bir sonraki karta geç
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // 3️⃣ Motivasyon mesajı ile birlikte sonucu göster (2 saniye)
+    await Future.delayed(const Duration(milliseconds: 2000));
 
     // Kartı geri çevir
     if (_isFlipped) {

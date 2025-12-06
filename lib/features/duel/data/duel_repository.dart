@@ -72,7 +72,9 @@ class DuelRepository {
       final levels = await db.query('FillBlanksLevels');
 
       if (kDebugMode) {
-        debugPrint('🔍 FillBlanksLevels tablosundan ${levels.length} level bulundu');
+        debugPrint(
+          '🔍 FillBlanksLevels tablosundan ${levels.length} level bulundu',
+        );
       }
 
       if (levels.isEmpty) {
@@ -89,14 +91,22 @@ class DuelRepository {
           try {
             final List<dynamic> questions = json.decode(questionsJson);
             if (kDebugMode) {
-              debugPrint('📝 Level ${level['levelID']}: ${questions.length} soru bulundu');
+              debugPrint(
+                '📝 Level ${level['levelID']}: ${questions.length} soru bulundu',
+              );
             }
             for (int i = 0; i < questions.length; i++) {
               final q = questions[i];
               // Cümle alanını kontrol et - farklı alan isimleri olabilir
-              final sentence = q['sentence'] ?? q['cumle'] ?? q['text'] ?? q['soru'] ?? '';
-              final answer = q['answer'] ?? q['cevap'] ?? q['correctAnswer'] ?? q['dogruCevap'] ?? '';
-              
+              final sentence =
+                  q['sentence'] ?? q['cumle'] ?? q['text'] ?? q['soru'] ?? '';
+              final answer =
+                  q['answer'] ??
+                  q['cevap'] ??
+                  q['correctAnswer'] ??
+                  q['dogruCevap'] ??
+                  '';
+
               // Options/secenekler kontrolü
               List<String> options = [];
               if (q['options'] != null) {
@@ -106,7 +116,7 @@ class DuelRepository {
               } else if (q['choices'] != null) {
                 options = List<String>.from(q['choices']);
               }
-              
+
               // Eğer options boşsa ve answer varsa, options oluştur
               if (options.isEmpty && answer.toString().isNotEmpty) {
                 options = [answer.toString()];
@@ -115,7 +125,7 @@ class DuelRepository {
                   options.addAll(List<String>.from(q['wrongAnswers']));
                 }
               }
-              
+
               if (sentence.toString().isNotEmpty) {
                 allQuestions.add(
                   DuelFillBlankQuestion(

@@ -139,7 +139,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
 
   Future<void> _onCityChanged(String city) async {
     _triggerHaptic();
-    
+
     // Loading sadece picker kapatıldığında ve okul verisi indirilirken gösterilecek
     // setState ile ana ekranı yenileme - sadece seçim değişikliği
     setState(() {
