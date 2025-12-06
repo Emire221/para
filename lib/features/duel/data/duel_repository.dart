@@ -71,6 +71,10 @@ class DuelRepository {
       // Fill Blanks levellarını çek
       final levels = await db.query('FillBlanksLevels');
 
+      if (kDebugMode) {
+        debugPrint('🔍 FillBlanksLevels tablosundan ${levels.length} level bulundu');
+      }
+
       if (levels.isEmpty) {
         if (kDebugMode) debugPrint('❌ Hiç fill blanks level bulunamadı');
         return _getDefaultFillBlankQuestions();
@@ -84,18 +88,44 @@ class DuelRepository {
         if (questionsJson != null && questionsJson.isNotEmpty) {
           try {
             final List<dynamic> questions = json.decode(questionsJson);
+            if (kDebugMode) {
+              debugPrint('📝 Level ${level['levelID']}: ${questions.length} soru bulundu');
+            }
             for (int i = 0; i < questions.length; i++) {
               final q = questions[i];
-              allQuestions.add(
-                DuelFillBlankQuestion(
-                  id: '${level['levelID']}_$i',
-                  sentence: q['sentence'] ?? q['cumle'] ?? '',
-                  answer: q['answer'] ?? q['cevap'] ?? '',
-                  options: List<String>.from(
-                    q['options'] ?? q['secenekler'] ?? [],
+              // Cümle alanını kontrol et - farklı alan isimleri olabilir
+              final sentence = q['sentence'] ?? q['cumle'] ?? q['text'] ?? q['soru'] ?? '';
+              final answer = q['answer'] ?? q['cevap'] ?? q['correctAnswer'] ?? q['dogruCevap'] ?? '';
+              
+              // Options/secenekler kontrolü
+              List<String> options = [];
+              if (q['options'] != null) {
+                options = List<String>.from(q['options']);
+              } else if (q['secenekler'] != null) {
+                options = List<String>.from(q['secenekler']);
+              } else if (q['choices'] != null) {
+                options = List<String>.from(q['choices']);
+              }
+              
+              // Eğer options boşsa ve answer varsa, options oluştur
+              if (options.isEmpty && answer.toString().isNotEmpty) {
+                options = [answer.toString()];
+                // Diğer seçenekleri ekle (varsa)
+                if (q['wrongAnswers'] != null) {
+                  options.addAll(List<String>.from(q['wrongAnswers']));
+                }
+              }
+              
+              if (sentence.toString().isNotEmpty) {
+                allQuestions.add(
+                  DuelFillBlankQuestion(
+                    id: '${level['levelID']}_$i',
+                    sentence: sentence.toString(),
+                    answer: answer.toString(),
+                    options: options,
                   ),
-                ),
-              );
+                );
+              }
             }
           } catch (e) {
             if (kDebugMode) debugPrint('Soru parse hatası: $e');

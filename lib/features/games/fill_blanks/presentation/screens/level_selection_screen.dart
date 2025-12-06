@@ -142,17 +142,10 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen>
   }
 
   /// Seviyenin kilitli olup olmadığını kontrol et
+  /// Tüm seviyeler açık - kilitleme yok
   bool _isLevelLocked(int index) {
-    if (index == 0) return false; // İlk seviye her zaman açık
-
-    // Önceki seviyenin tamamlanmış olması gerekir
-    if (_levels != null && index > 0) {
-      final previousLevel = _levels![index - 1];
-      final previousStars = _completedLevels[previousLevel.id] ?? 0;
-      return previousStars == 0;
-    }
-
-    return true;
+    // Tüm seviyeler açık - hiçbiri kilitli değil
+    return false;
   }
 
   void _scrollToCurrentLevel() {

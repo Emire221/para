@@ -79,33 +79,27 @@ class _SplashScreenState extends State<SplashScreen>
   void _startAnimationSequence() async {
     // Splash ekranı minimum süresini takip et
     final splashStartTime = DateTime.now();
-    const minimumSplashDuration = Duration(seconds: 2);
+    const minimumSplashDuration = Duration(seconds: 3); // Minimum 3 saniye
 
-    // Big Bang - 0.5 saniye
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Big Bang - 0.6 saniye
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     setState(() => _showBigBang = false);
 
-    // Maskotlar beliriyor - 0.3 saniye sonra
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Maskotlar beliriyor - 0.4 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
     setState(() => _showMascots = true);
 
-    // Başlık beliriyor - 0.5 saniye sonra
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Başlık beliriyor - 0.6 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     setState(() => _showTitle = true);
 
-    // Loading beliriyor - 0.5 saniye sonra
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Loading beliriyor - 0.6 saniye sonra
+    await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     setState(() => _showLoading = true);
-
-    // Minimum 2 saniye geçmesini garantile
-    final elapsed = DateTime.now().difference(splashStartTime);
-    if (elapsed < minimumSplashDuration) {
-      await Future.delayed(minimumSplashDuration - elapsed);
-    }
 
     // Mesaj değiştirme timer'ı
     _messageTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
@@ -118,6 +112,12 @@ class _SplashScreenState extends State<SplashScreen>
             (_currentMessageIndex + 1) % _loadingMessages.length;
       });
     });
+
+    // Minimum 3 saniye geçmesini garantile
+    final elapsed = DateTime.now().difference(splashStartTime);
+    if (elapsed < minimumSplashDuration) {
+      await Future.delayed(minimumSplashDuration - elapsed);
+    }
 
     // Login'e geçiş
     if (!mounted) return;

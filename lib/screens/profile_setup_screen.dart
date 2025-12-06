@@ -134,15 +134,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
     }
   }
 
+  // İl değişikliği için loading durumu - sadece ilk il seçiminde gösterilecek
+  bool _isCityLoading = false;
+
   Future<void> _onCityChanged(String city) async {
     _triggerHaptic();
+    
+    // Loading sadece picker kapatıldığında ve okul verisi indirilirken gösterilecek
+    // setState ile ana ekranı yenileme - sadece seçim değişikliği
     setState(() {
       _selectedCity = city;
       _selectedDistrict = null;
       _selectedSchoolID = null;
       _filteredSchools = [];
-      _isLoadingData = true;
-      _loadingMessage = 'Okullar yükleniyor...';
+      _isCityLoading = true; // Sadece bu il için loading
     });
 
     try {
@@ -164,12 +169,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
         setState(() {
           _schools = schools;
           _districts = districts;
-          _isLoadingData = false;
+          _isCityLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoadingData = false);
+        setState(() => _isCityLoading = false);
         _showError('Okul listesi yüklenemedi');
       }
     }
@@ -824,13 +829,40 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen>
               onTap: () => _showCityPicker(context),
             ),
             const SizedBox(height: 12),
-            _buildPickerButton(
-              label: _selectedDistrict ?? 'İlçe Seçiniz',
-              icon: Icons.map,
-              isSelected: _selectedDistrict != null,
-              enabled: _selectedCity != null,
-              onTap: _selectedCity != null ? _showDistrictPicker : null,
-            ),
+            _isCityLoading
+                ? Container(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Okullar yükleniyor...',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _buildPickerButton(
+                    label: _selectedDistrict ?? 'İlçe Seçiniz',
+                    icon: Icons.map,
+                    isSelected: _selectedDistrict != null,
+                    enabled: _selectedCity != null && _districts.isNotEmpty,
+                    onTap: _selectedCity != null && _districts.isNotEmpty
+                        ? _showDistrictPicker
+                        : null,
+                  ),
             const SizedBox(height: 12),
             _buildPickerButton(
               label: _selectedSchoolID != null && _filteredSchools.isNotEmpty
