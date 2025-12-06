@@ -1,5 +1,5 @@
 name: bilgici
-description: "A new Flutter project."
+description: "Bilgi Avcısı - Türk öğrenciler için eğitim uygulaması"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -64,6 +64,24 @@ dev_dependencies:
   mockito: ^5.4.6
   # Tools - manifest generator için
   crypto: ^3.0.3
+  # App Icon Generator
+  flutter_launcher_icons: ^0.14.3
+
+# Flutter Launcher Icons yapılandırması
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/appicon/bilgiavcisi.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/appicon/bilgiavcisi.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/appicon/bilgiavcisi.png"
+  windows:
+    generate: true
+    image_path: "assets/appicon/bilgiavcisi.png"
 
 flutter:
   uses-material-design: true
@@ -71,3 +89,4 @@ flutter:
     - assets/json/
     - assets/images/
     - assets/animation/
+    - assets/appicon/
