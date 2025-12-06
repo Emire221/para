@@ -247,4 +247,67 @@ class NotificationService {
   tz.TZDateTime _convertToTZDateTime(DateTime dateTime) {
     return tz.TZDateTime.from(dateTime, tz.local);
   }
+
+  // ========== HOŞGELDİN BİLDİRİMİ ==========
+
+  /// İlk kurulumdan sonra hoşgeldin bildirimi gönderir
+  /// @param userName Kullanıcının adı
+  /// @param delaySeconds Kaç saniye sonra gönderilecek (varsayılan: 10)
+  Future<void> scheduleWelcomeNotification({
+    required String userName,
+    int delaySeconds = 10,
+  }) async {
+    final scheduledTime = DateTime.now().add(Duration(seconds: delaySeconds));
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'welcome_channel',
+          'Hoşgeldin Bildirimleri',
+          channelDescription: 'Yeni kullanıcılar için karşılama bildirimleri',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+          styleInformation: BigTextStyleInformation(''),
+        );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    final notificationId = 'welcome_$userName'.hashCode;
+    final title = '🎉 Hoş Geldin $userName!';
+    final body =
+        '🚀 Öğrenme macerana hoş geldin!\n\n'
+        '📚 Testler, bilgi kartları ve mini oyunlarla öğrenmeyi keşfet.\n'
+        '🎮 Tüm ekranları kontrol etmeyi unutma!\n\n'
+        '⭐ Şimdi başla ve bilgi avcısı ol!';
+
+    // Zamanlanmış bildirim
+    await _notificationsPlugin.zonedSchedule(
+      notificationId,
+      title,
+      body,
+      _convertToTZDateTime(scheduledTime),
+      notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'welcome_notification',
+    );
+
+    // Veritabanına kaydet
+    await DatabaseHelper().insertNotification({
+      'title': title,
+      'body': body,
+      'date': scheduledTime.toIso8601String(),
+      'isRead': 0,
+    });
+  }
 }

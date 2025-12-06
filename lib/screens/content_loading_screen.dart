@@ -6,8 +6,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/sync_provider.dart';
 import '../features/sync/domain/models/manifest_model.dart';
+import '../services/notification_service.dart';
 import 'main_screen.dart';
 
 /// İçerik Yükleme Ekranı
@@ -188,10 +190,16 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
         throw Exception('Kullanıcı profili bulunamadı');
       }
 
-      final selectedClass = userDoc.data()?['classLevel'] as String?;
+      final userData = userDoc.data();
+      final selectedClass = userData?['classLevel'] as String?;
+      final userName = userData?['name'] as String? ?? 'Öğrenci';
+
       if (selectedClass == null) {
         throw Exception('Sınıf bilgisi bulunamadı');
       }
+
+      // 🎉 İlk kurulumda hoşgeldin bildirimi gönder (10 saniye sonra)
+      await _scheduleWelcomeNotificationIfFirstTime(userName);
 
       // Sınıf adını güvenli formata çevir
       final safeClassName = selectedClass
@@ -249,6 +257,29 @@ class _ContentLoadingScreenState extends ConsumerState<ContentLoadingScreen>
       ),
       (route) => false,
     );
+  }
+
+  /// İlk kurulumda hoşgeldin bildirimi gönder (sadece bir kez)
+  Future<void> _scheduleWelcomeNotificationIfFirstTime(String userName) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasReceivedWelcome =
+          prefs.getBool('has_received_welcome_notification') ?? false;
+
+      if (!hasReceivedWelcome) {
+        // İlk kez - hoşgeldin bildirimi planla (10 saniye sonra)
+        await NotificationService().scheduleWelcomeNotification(
+          userName: userName,
+          delaySeconds: 10,
+        );
+
+        // İşareti kaydet - bir daha gönderilmeyecek
+        await prefs.setBool('has_received_welcome_notification', true);
+      }
+    } catch (e) {
+      // Bildirim hatası kritik değil, devam et
+      debugPrint('Hoşgeldin bildirimi hatası: $e');
+    }
   }
 
   @override
