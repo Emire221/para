@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'firebase_options.dart';
 
 // 👇 Test etmek istediğin ekranı buradan import et
-import 'screens/main_screen.dart';
+import 'features/exam/presentation/widgets/weekly_exam_card.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +29,38 @@ void main() async {
           ),
         ),
         // 👇 Test etmek istediğin ekranı buraya yaz
-        home: const MainScreen(),
+        home: const _WeeklyExamCardTestScreen(),
       ),
     ),
   );
+}
+
+/// WeeklyExamCard test ekranı
+class _WeeklyExamCardTestScreen extends StatelessWidget {
+  const _WeeklyExamCardTestScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF1a0033),
+      appBar: AppBar(
+        title: const Text('Weekly Exam Card Test'),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+      ),
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            WeeklyExamCard(),
+            SizedBox(height: 32),
+            Text(
+              '👆 THE GOLDEN BOSS CARD',
+              style: TextStyle(color: Colors.white54, fontSize: 14),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

@@ -1,9 +1,19 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:ui';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../domain/models/weekly_exam.dart';
 import '../../data/weekly_exam_service.dart';
 
-/// Haftalık sınav çözme ekranı
+/// ═══════════════════════════════════════════════════════════════════════════
+/// 🏆 GOLD CLASS EXAM - Haftalık Sınav Boss Stage
+/// ═══════════════════════════════════════════════════════════════════════════
+/// Standart test ekranından daha ciddi ve "premium" bir atmosfer.
+/// Derin okyanus mavisi gradient, altın vurgular ve glass efektleri.
+/// ═══════════════════════════════════════════════════════════════════════════
+
 class WeeklyExamScreen extends StatefulWidget {
   final WeeklyExam exam;
 
@@ -13,7 +23,11 @@ class WeeklyExamScreen extends StatefulWidget {
   State<WeeklyExamScreen> createState() => _WeeklyExamScreenState();
 }
 
-class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
+class _WeeklyExamScreenState extends State<WeeklyExamScreen>
+    with TickerProviderStateMixin {
+  // ─────────────────────────────────────────────────────────────────────────
+  // CONTROLLERS & STATE (KORUNAN MANTIK)
+  // ─────────────────────────────────────────────────────────────────────────
   final PageController _pageController = PageController();
   final WeeklyExamService _examService = WeeklyExamService();
   final Map<String, String> _answers = {};
@@ -23,10 +37,47 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
   int _currentQuestionIndex = 0;
   bool _isSubmitting = false;
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ANİMASYON KONTROLCÜLERİ
+  // ─────────────────────────────────────────────────────────────────────────
+  late AnimationController _timerShakeController;
+  late AnimationController _introController;
+  bool _showIntro = true;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENK PALETİ - GOLD CLASS
+  // ─────────────────────────────────────────────────────────────────────────
+  static const Color _deepOcean = Color(0xFF0F2027);
+  static const Color _darkSea = Color(0xFF203A43);
+  static const Color _midSea = Color(0xFF2C5364);
+  static const Color _gold = Color(0xFFFFD700);
+  static const Color _goldDark = Color(0xFFB8860B);
+  static const Color _danger = Color(0xFFE53935);
+
   @override
   void initState() {
     super.initState();
     _remainingSeconds = widget.exam.duration * 60;
+
+    // Timer shake animasyonu
+    _timerShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    // İntro animasyonu
+    _introController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // İntro animasyonunu başlat
+    _introController.forward().then((_) {
+      if (mounted) {
+        setState(() => _showIntro = false);
+      }
+    });
+
     _startTimer();
   }
 
@@ -34,14 +85,28 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
+    _timerShakeController.dispose();
+    _introController.dispose();
     super.dispose();
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // TIMER MANTIĞI (KORUNAN)
+  // ─────────────────────────────────────────────────────────────────────────
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_remainingSeconds > 0) {
           _remainingSeconds--;
+
+          // Son %20 sürede shake efekti
+          final totalSeconds = widget.exam.duration * 60;
+          if (_remainingSeconds < totalSeconds * 0.2 &&
+              _remainingSeconds % 10 == 0) {
+            _timerShakeController.forward().then((_) {
+              _timerShakeController.reverse();
+            });
+          }
         } else {
           _finishExam();
         }
@@ -49,12 +114,19 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
     });
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // CEVAP SEÇİMİ (KORUNAN)
+  // ─────────────────────────────────────────────────────────────────────────
   void _selectAnswer(String questionId, String answer) {
+    HapticFeedback.selectionClick();
     setState(() {
       _answers[questionId] = answer;
     });
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // SINAVI BİTİRME (KORUNAN)
+  // ─────────────────────────────────────────────────────────────────────────
   Future<void> _finishExam() async {
     if (_isSubmitting) return;
     _isSubmitting = true;
@@ -80,163 +152,152 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
       // Kullanıcıyı bilgilendir ve ana sayfaya dön
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Cevapların kaydedildi! 🎉 Sonuçlar Pazar 20:00\'da açıklanacak.',
+        SnackBar(
+          content: Row(
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Cevapların kaydedildi! Sonuçlar Pazar 20:00\'da açıklanacak.',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
           ),
-          duration: Duration(seconds: 4),
-          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 4),
+          backgroundColor: _gold.withOpacity(0.9),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } catch (e) {
       _isSubmitting = false;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hata oluştu: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Hata oluştu: $e'), backgroundColor: _danger),
         );
       }
     }
   }
 
+  String _formatTime(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        final shouldPop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Sınavı Bırak'),
-            content: const Text(
-              'Sınavdan çıkmak istediğine emin misin?\n\n'
-              '⚠️ Cevapların kaydedilmeyecek!',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Hayır, Devam Et'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Evet, Çık'),
-              ),
-            ],
-          ),
-        );
-        if (shouldPop ?? false) {
-          if (context.mounted) Navigator.of(context).pop();
+        final shouldPop = await _showExitDialog();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
         }
       },
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.indigo.shade800, Colors.indigo.shade400],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Üst bar
-                _buildTopBar(),
+        body: Stack(
+          children: [
+            // ═══ ARKA PLAN ═══
+            _buildBackground(),
 
-                // İlerleme çubuğu
-                LinearProgressIndicator(
-                  value:
-                      (_currentQuestionIndex + 1) /
-                      widget.exam.questions.length,
-                  backgroundColor: Colors.white.withValues(alpha: 0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
-                ),
+            // ═══ ANA İÇERİK ═══
+            SafeArea(
+              child: Column(
+                children: [
+                  // The HUD (Üst Bar)
+                  _buildHUD(),
 
-                // Soru alanı
-                Expanded(
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentQuestionIndex = index;
-                      });
-                    },
-                    itemCount: widget.exam.questions.length,
-                    itemBuilder: (context, index) {
-                      return _buildQuestionPage(index);
-                    },
+                  // Progress Indicator
+                  _buildProgressBar(),
+
+                  // Soru Alanı
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(),
+                      onPageChanged: (index) {
+                        HapticFeedback.lightImpact();
+                        setState(() {
+                          _currentQuestionIndex = index;
+                        });
+                      },
+                      itemCount: widget.exam.questions.length,
+                      itemBuilder: (context, index) {
+                        return _buildQuestionPage(index);
+                      },
+                    ),
                   ),
-                ),
 
-                // Alt navigasyon
-                _buildBottomNavigation(),
-              ],
+                  // Kontrol Paneli
+                  _buildControlPanel(),
+                ],
+              ),
             ),
-          ),
+
+            // ═══ İNTRO OVERLAY ═══
+            if (_showIntro) _buildIntroOverlay(),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildTopBar() {
-    final isLowTime = _remainingSeconds < 300; // Son 5 dakika
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // ARKA PLAN
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildBackground() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_deepOcean, _darkSea, _midSea],
+          stops: [0.0, 0.5, 1.0],
+        ),
+      ),
+      child: Stack(
         children: [
-          // Sınav başlığı
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.exam.title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+          // Dekoratif daireler
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [_gold.withOpacity(0.1), Colors.transparent],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_currentQuestionIndex + 1}/${widget.exam.questions.length}',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-
-          // Geri sayım
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isLowTime
-                  ? Colors.red
-                  : Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.timer, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  _formatTime(_remainingSeconds),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'monospace',
-                  ),
+          Positioned(
+            bottom: -150,
+            left: -150,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [_gold.withOpacity(0.05), Colors.transparent],
                 ),
-              ],
+              ),
             ),
           ),
         ],
@@ -244,6 +305,131 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // THE HUD (ÜST BAR)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildHUD() {
+    final totalSeconds = widget.exam.duration * 60;
+    final isLowTime = _remainingSeconds < totalSeconds * 0.2;
+    final isCritical = _remainingSeconds < totalSeconds * 0.1;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          // Geri butonu
+          _buildGlassButton(
+            onTap: () async {
+              final shouldPop = await _showExitDialog();
+              if (shouldPop && mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Icon(Icons.close, color: Colors.white, size: 20),
+          ),
+
+          const Spacer(),
+
+          // Timer (Merkez) - Glass Container
+          AnimatedBuilder(
+            animation: _timerShakeController,
+            builder: (context, child) {
+              final shake = _timerShakeController.value * 10;
+              return Transform.translate(
+                offset: Offset(
+                  shake *
+                      ((_timerShakeController.value * 10).toInt() % 2 == 0
+                          ? 1
+                          : -1),
+                  0,
+                ),
+                child: child,
+              );
+            },
+            child: _buildGlassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              borderColor: isCritical
+                  ? _danger
+                  : (isLowTime
+                        ? _danger.withOpacity(0.7)
+                        : _gold.withOpacity(0.3)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.timer,
+                    color: isCritical ? _danger : (isLowTime ? _danger : _gold),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _formatTime(_remainingSeconds),
+                    style: TextStyle(
+                      color: isCritical ? _danger : Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ).animate(target: isLowTime ? 1 : 0).shake(duration: 500.ms, hz: 4),
+
+          const Spacer(),
+
+          // Soru sayısı badge
+          _buildGlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(
+              '${_currentQuestionIndex + 1}/${widget.exam.questions.length}',
+              style: const TextStyle(
+                color: _gold,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PROGRESS BAR
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildProgressBar() {
+    return Container(
+      height: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(2),
+        color: Colors.white.withOpacity(0.1),
+      ),
+      child: FractionallySizedBox(
+        alignment: Alignment.centerLeft,
+        widthFactor: (_currentQuestionIndex + 1) / widget.exam.questions.length,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            gradient: const LinearGradient(colors: [_goldDark, _gold]),
+            boxShadow: [
+              BoxShadow(
+                color: _gold.withOpacity(0.5),
+                blurRadius: 8,
+                offset: const Offset(0, 0),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().fadeIn(delay: 300.ms);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SORU SAYFASI (THE GOLDEN CARD)
+  // ─────────────────────────────────────────────────────────────────────────
   Widget _buildQuestionPage(int index) {
     final question = widget.exam.questions[index];
     final questionId = (index + 1).toString();
@@ -257,211 +443,393 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
     ];
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Soru numarası
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Soru ${index + 1}',
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          const SizedBox(height: 8),
 
-          const SizedBox(height: 20),
-
-          // Soru metni
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Text(
-              question.questionText,
-              style: const TextStyle(
-                fontSize: 18,
-                height: 1.5,
-                color: Colors.black87,
-              ),
-            ),
-          ),
+          // ═══ THE GOLDEN CARD ═══
+          _buildGoldenQuestionCard(index, question.questionText),
 
           const SizedBox(height: 24),
 
-          // Seçenekler
-          ...options.map((option) {
+          // ═══ CEVAP ŞIKLARI ═══
+          ...options.asMap().entries.map((entry) {
+            final optionIndex = entry.key;
+            final option = entry.value;
             final letter = option.$1;
             final text = option.$2;
             final isSelected = selectedAnswer == letter;
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
+            return _buildOptionButton(
+                  letter: letter,
+                  text: text,
+                  isSelected: isSelected,
                   onTap: () => _selectAnswer(questionId, letter),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.amber.withValues(alpha: 0.3)
-                          : Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected ? Colors.amber : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Colors.amber
-                                : Colors.indigo.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              letter,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.indigo.shade800,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            text,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          const Icon(Icons.check_circle, color: Colors.amber),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
+                )
+                .animate()
+                .fadeIn(delay: Duration(milliseconds: 100 * optionIndex))
+                .slideX(
+                  begin: 0.1,
+                  delay: Duration(milliseconds: 100 * optionIndex),
+                );
           }),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildBottomNavigation() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Cevaplanmış soru sayısı
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.indigo.shade50,
-              borderRadius: BorderRadius.circular(8),
+  // ─────────────────────────────────────────────────────────────────────────
+  // GOLDEN QUESTION CARD
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildGoldenQuestionCard(int index, String questionText) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Ana kart
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _gold.withOpacity(0.3), width: 1),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.1),
+                Colors.white.withOpacity(0.05),
+              ],
             ),
-            child: Text(
-              '${_answers.length}/${widget.exam.questions.length} cevaplandı',
-              style: TextStyle(
-                color: Colors.indigo.shade800,
-                fontWeight: FontWeight.w600,
+            boxShadow: [
+              BoxShadow(
+                color: _gold.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Text(
+                questionText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  height: 1.6,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.3,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),
+        ),
 
-          const Spacer(),
+        // Soru numarası rozeti (Kartın üstünde)
+        Positioned(
+          top: -14,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [_goldDark, _gold]),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: _gold.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Soru ${index + 1}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
+  }
 
-          // Geri butonu
+  // ─────────────────────────────────────────────────────────────────────────
+  // CEVAP ŞIKKI BUTONU
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildOptionButton({
+    required String letter,
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? _gold : Colors.white.withOpacity(0.2),
+                width: isSelected ? 2 : 1,
+              ),
+              gradient: isSelected
+                  ? const LinearGradient(colors: [_gold, _goldDark])
+                  : LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                    ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: _gold.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              children: [
+                // Şık harfi
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected
+                        ? Colors.black.withOpacity(0.3)
+                        : Colors.white.withOpacity(0.1),
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.black.withOpacity(0.3)
+                          : _gold.withOpacity(0.5),
+                      width: 1,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      letter,
+                      style: TextStyle(
+                        color: isSelected ? Colors.black87 : _gold,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // Şık metni
+                Expanded(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: isSelected ? Colors.black87 : Colors.white,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+
+                // Seçim ikonu
+                if (isSelected)
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // KONTROL PANELİ (ALT)
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildControlPanel() {
+    final isLastQuestion =
+        _currentQuestionIndex == widget.exam.questions.length - 1;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.transparent, _deepOcean.withOpacity(0.8)],
+        ),
+      ),
+      child: Row(
+        children: [
+          // Önceki butonu
           if (_currentQuestionIndex > 0)
-            IconButton(
-              onPressed: () {
+            _buildNavigationButton(
+              icon: Icons.chevron_left,
+              onTap: () {
+                HapticFeedback.lightImpact();
                 _pageController.previousPage(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                 );
               },
-              icon: const Icon(Icons.arrow_back_ios),
-              color: Colors.indigo,
-            ),
+            )
+          else
+            const SizedBox(width: 48),
 
-          // İleri/Bitir butonu
-          ElevatedButton.icon(
-            onPressed: () {
-              if (_currentQuestionIndex < widget.exam.questions.length - 1) {
-                _pageController.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              } else {
-                _showFinishDialog();
-              }
-            },
-            icon: Icon(
-              _currentQuestionIndex < widget.exam.questions.length - 1
-                  ? Icons.arrow_forward_ios
-                  : Icons.check,
-            ),
-            label: Text(
-              _currentQuestionIndex < widget.exam.questions.length - 1
-                  ? 'İleri'
-                  : 'Bitir',
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  _currentQuestionIndex < widget.exam.questions.length - 1
-                  ? Colors.indigo
-                  : Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          const Spacer(),
+
+          // Cevaplanmış soru sayısı
+          _buildGlassContainer(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle_outline, color: _gold, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  '${_answers.length}/${widget.exam.questions.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
+
+          const Spacer(),
+
+          // Sonraki/Bitir butonu
+          isLastQuestion
+              ? _buildFinishButton()
+              : _buildNavigationButton(
+                  icon: Icons.chevron_right,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _pageController.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
         ],
       ),
     );
+  }
+
+  Widget _buildNavigationButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return _buildGlassButton(
+      onTap: onTap,
+      child: Icon(icon, color: Colors.white, size: 28),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SINAVI TAMAMLA BUTONU
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildFinishButton() {
+    return GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            _showFinishDialog();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [_goldDark, _gold]),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: _gold.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'BİTİR',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withOpacity(0.2),
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 16),
+                ),
+              ],
+            ),
+          ),
+        )
+        .animate(onPlay: (c) => c.repeat(reverse: true))
+        .shimmer(duration: 2000.ms, color: Colors.white.withOpacity(0.3));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // DİALOGLAR
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<bool> _showExitDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => _buildGlassDialog(
+            title: 'Sınavı Bırak',
+            content:
+                'Sınavdan çıkmak istediğine emin misin?\n\n⚠️ Cevapların kaydedilmeyecek!',
+            confirmText: 'Evet, Çık',
+            cancelText: 'Devam Et',
+            isDestructive: true,
+          ),
+        ) ??
+        false;
   }
 
   void _showFinishDialog() {
@@ -469,50 +837,232 @@ class _WeeklyExamScreenState extends State<WeeklyExamScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Sınavı Bitir'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${widget.exam.questions.length} sorudan ${_answers.length} tanesini cevapladın.',
-            ),
-            if (unanswered > 0) ...[
-              const SizedBox(height: 8),
-              Text(
-                '⚠️ $unanswered soru boş bırakılacak.',
-                style: const TextStyle(color: Colors.orange),
-              ),
-            ],
-            const SizedBox(height: 16),
-            const Text(
-              'Sınavı bitirmek istediğine emin misin?',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _finishExam();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Bitir'),
-          ),
-        ],
+      builder: (context) => _buildGlassDialog(
+        title: '🏆 Sınavı Bitir',
+        content: unanswered > 0
+            ? '${widget.exam.questions.length} sorudan ${_answers.length} tanesini cevapladın.\n\n⚠️ $unanswered soru boş bırakılacak.\n\nSınavı bitirmek istediğine emin misin?'
+            : 'Tüm soruları cevapladın! 🎉\n\nSınavı bitirmek istediğine emin misin?',
+        confirmText: 'Bitir',
+        cancelText: 'İptal',
+        onConfirm: () {
+          Navigator.of(context).pop();
+          _finishExam();
+        },
       ),
     );
   }
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  Widget _buildGlassDialog({
+    required String title,
+    required String content,
+    required String confirmText,
+    required String cancelText,
+    bool isDestructive = false,
+    VoidCallback? onConfirm,
+  }) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: _gold.withOpacity(0.3), width: 1),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _deepOcean.withOpacity(0.9),
+                  _darkSea.withOpacity(0.9),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: _gold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  content,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 15,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          cancelText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed:
+                            onConfirm ?? () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDestructive ? _danger : _gold,
+                          foregroundColor: isDestructive
+                              ? Colors.white
+                              : Colors.black87,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          confirmText,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ).animate().fadeIn(duration: 200.ms).scale(begin: const Offset(0.9, 0.9));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // İNTRO OVERLAY
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildIntroOverlay() {
+    return AnimatedBuilder(
+      animation: _introController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: 1 - _introController.value,
+          child: Container(
+            color: _deepOcean,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🏆', style: TextStyle(fontSize: 60)),
+                  const SizedBox(height: 20),
+                  Text(
+                    widget.exam.title,
+                    style: const TextStyle(
+                      color: _gold,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '${widget.exam.questions.length} Soru • ${widget.exam.duration} Dakika',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // YARDIMCI WIDGET'LAR
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildGlassContainer({
+    required Widget child,
+    EdgeInsets padding = const EdgeInsets.all(12),
+    Color? borderColor,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor ?? Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withOpacity(0.15),
+                Colors.white.withOpacity(0.05),
+              ],
+            ),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassButton({
+    required Widget child,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.white.withOpacity(0.2)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.15),
+                  Colors.white.withOpacity(0.05),
+                ],
+              ),
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
   }
 }
