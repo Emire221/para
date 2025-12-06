@@ -303,8 +303,9 @@ Games Tab → Memory Game → Memory Result → (Başarılar'a kayıt)
 - **Flutter Secure Storage** `^9.2.2` - Güvenli veri saklama
 
 ### UI & Media
-- **Google Fonts** `^6.2.1` - Özel fontlar
+- **Google Fonts** `^6.2.1` - Özel fontlar (Orbitron, Roboto)
 - **Lottie** `^3.1.0` - Animasyonlar
+- **flutter_animate** `^4.5.2` - Smooth UI animasyonları
 - **Cached Network Image** `^3.4.1` - Resim cache
 - **Confetti** `^0.7.0` - Kutlama animasyonları
 
@@ -657,9 +658,10 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
 
 ### Test İstatistikleri
 
-- **Toplam Test**: 37
+- **Toplam Test**: 38
 - **Başarılı**: 37
-- **Başarı Oranı**: %100
+- **Başarısız**: 1 (firebase_storage_service_test)
+- **Başarı Oranı**: %97.3
 - **Coverage**: Unit, Widget, Integration
 
 ---
@@ -670,14 +672,56 @@ Uygulama, Firebase Storage'dan içerikleri akıllı bir şekilde indirir:
 
 ```
 ✅ No issues found!
-📊 Analyzed in 52.8s
-🧪 37/37 tests passing
-📈 100% success rate
+📊 Analyzed in 7.9s
+🧪 37/38 tests passing
+📈 97.3% success rate
 ```
 
 ---
 
 ## 📝 Son Güncellemeler
+
+### [v1.5.0] - 2025-12-06
+
+#### Added ✨
+- **UI/UX Redesign**: Modern Neon tema sistemi
+  - **Glassmorphism Design**: Buzlu cam efektli container'lar
+  - **Neon Color Palette**: Vibrant gradient renkler
+  - **flutter_animate Paketi**: Smooth animasyonlar
+  - **Google Fonts (Orbitron)**: Futuristik tipografi
+  - **2 Yeni Lottie Animasyonu**: `card_thoropy.json`, `match_macking.json`
+
+- **Tema Grupları**:
+  - **Neon Arena**: Matchmaking, Duel Selection, Duel Game
+  - **Neon Brain**: Memory Game, Memory Result
+  - **Shake Wave**: Guess Level Selection, Guess Game, Guess Result
+  - **Neon Review**: Answer Key Screen
+  - **Neon Notification**: Notifications Screen
+
+#### Changed 🔄
+- **Matchmaking Screen**: Neon Arena tema + Lottie animasyonu
+- **Duel Selection Screen**: Glass bottom sheet design
+- **Duel Game Screen**: Battle Arena tema
+- **Memory Game Screen**: Neon Brain tema ile akıcı kart animasyonları
+- **Memory Result Screen**: Victory Celebration tasarımı
+- **Guess Level Selection**: Shake Wave gradient tema
+- **Guess Game Screen**: Temperature-based arka plan renkleri
+- **Guess Result Screen**: Shake Wave Victory kutlaması
+- **Notifications Screen**: Neon Notification popup tasarımı
+- **Answer Key Screen**: Neon Review tema ile glassmorphism kartlar
+- **Fill Blanks Screen**: Neon gradient arka planlar
+- **Level Selection Screen**: Modern glass morphism
+- **Weekly Exam Screens**: Modern tasarım güncellemeleri
+
+#### İstatistikler (v1.5.0)
+- 📝 18 dosya değişti
+- ➕ 10,453 satır eklendi
+- ➖ 3,115 satır silindi
+- 🎨 5 yeni tema grubu
+- 🎬 2 yeni Lottie animasyonu
+- ✅ 0 lint hatası
+
+---
 
 ### [v1.4.0] - 2025-12-05
 
@@ -773,8 +817,8 @@ Bu proje özel mülkiyettir. Tüm hakları saklıdır.
 ---
 
 **Geliştirici**: Emire221  
-**Son Güncelleme**: 5 Aralık 2025  
-**Versiyon**: 1.4.0
+**Son Güncelleme**: 6 Aralık 2025  
+**Versiyon**: 1.5.0
 
 ---
 
